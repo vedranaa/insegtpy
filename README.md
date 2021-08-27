@@ -8,7 +8,7 @@ Contains:
 
 Input image | User labelings | Segmentation result | Screenshot
 :---:|:---:|:---:|:---:
-<img src="ExampleFigures/glass/gray.png" width = "250">  |  <img src="ExampleFigures/glass/annotations_overlay.png" width = "250"> | <img src="ExampleFigures/glass/segmentations_overlay.png" width = "250"> | <img src="ExampleFigures/glass/screenshot.png" width = "250">
+<img src="images/glass/gray.png" width = "250">  |  <img src="images/glass/annotations_overlay.png" width = "250"> | <img src="images/glass/segmentations_overlay.png" width = "250"> | <img src="images/glass/screenshot.png" width = "250">
 
 * `insegtbasic.py`, a module providing basic InSegt image processing functionality. Features (and differences compared to matlab version):
    - Purely python. (In matlab, we use mex files written in C++.)
@@ -20,13 +20,13 @@ Input image | User labelings | Segmentation result | Screenshot
    - In particular, it uses `insegtbasic.patch_clustering` function for building the dictionary and `insegtbasic.two_binarized` function for processing the label image into a segmentation image.
    - No interaction! Instead, you load an image to be segmented, and an image of the same size containing the user labeling.
 
-<div align="center"><img src="ExampleFigures/demo_insegtbasic.png" width = "750"></div>
+<div align="center"><img src="images/demo_insegtbasic.png" width = "750"></div>
 
 
 * `demo_insegtbasic_processing_explained.py`, similar to  the demo above, but the processing implemented in `insegtbasic.two_binarized` is divided into steps and visualized in more detail.
   - In particular, here you have access to assignment image and the probability images for different labels.
 
-<div align="center"><img src="ExampleFigures/demo_insegtbasic_explained.png" width = "750"></div>
+<div align="center"><img src="images/demo_insegtbasic_explained.png" width = "750"></div>
 
 * `annotator.py`, a module containing the `Annotator` class. `Annotator`, is a widget for drawing on an image. It is based on [qt for python](https://doc.qt.io/qtforpython/). All interaction is using mouse
 clicks, draws, and keyboard input. Help is accessed by pressing **H**. Built-in example uses an image from `skimage.data`.

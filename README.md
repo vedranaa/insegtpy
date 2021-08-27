@@ -2,6 +2,10 @@
 
 *A py version of [InSegt](https://github.com/vedranaa/InSegt)*
 
+Instalation:
+* Download the code
+* pip install -/path/to/insegtpy/folder/containing/setup.py
+
 Contains:
 
 * `demo_insegt.py`, a demo script showing how `insegtannotator` together with `insegtbasic` may be used for interactive segmentation.

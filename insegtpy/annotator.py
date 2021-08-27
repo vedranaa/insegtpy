@@ -10,8 +10,7 @@ clicks, draws, and keyboard input. Help is accessed by pressing 'H'.
 Use:
     Run fra command-line with
         $ python annotator image_filename
-    Or run from your environmend by passing it an rgba uint8 image, as in the 
-    example at the bottom of this file.
+    Or run from your environmend by passing it an rgba or gray uint8 image.
     
 Author: vand@dtu.dk, 2020
 Created on Sat Jun 20 12:43:29 2020
@@ -20,7 +19,7 @@ Todo:
     * Save output in a folder, and/or make a dialog when saving.
 
 GitHub:
-   https://github.com/vedranaa/InSegt/tree/master/pycode
+   https://github.com/vedranaa/insegtpy
 
 """
 
@@ -28,8 +27,6 @@ import sys
 import PyQt5.QtCore  
 import PyQt5.QtWidgets 
 import PyQt5.QtGui
-import skimage.data # this is just to get hold of example image
-import numpy as np # this is just to transform example image to rgba
   
 class Annotator(PyQt5.QtWidgets.QWidget):
     
@@ -452,28 +449,32 @@ class Annotator(PyQt5.QtWidgets.QWidget):
         coords =  rect.getCoords()
         s = f'({coords[0]},{coords[1]})--({coords[2]},{coords[3]})'
         return(s)     
-      
+ 
+    
+def annotate(image):
+    app = PyQt5.QtWidgets.QApplication([])
+    ex = Annotator.fromGrayscale(image)
+    app.exec()       
+ 
+    
 if __name__ == '__main__':
     
     '''
-    Annotator may be used from command-line. If no image is given, a test
-    image from skimage.data is used.
+    For use from command-line. 
     '''
        
-    app = PyQt5.QtWidgets.QApplication([])
-    
-    if len(sys.argv)>1:
-         filename = sys.argv[1]
-         ex = Annotator.fromFilename(filename)
+    if len(sys.argv)<2:
+        print('Usage: $ python annotator image_filename')
     else:
-         image = skimage.data.camera()
-         ex = Annotator.fromGrayscale(image)
+        app = PyQt5.QtWidgets.QApplication([])
+        filename = sys.argv[1]
+        ex = Annotator.fromFilename(filename)
     
-    # ex.show() is probably better placed here than in init
-    app.exec()
+        # ex.show() is probably better placed here than in init
+        app.exec()
     
-    #app.quit(), not needed? exec starts the loop which quits when the last top widget is closed  
-    #sys.exit(), not needed?  
+        #app.quit(), not needed? exec starts the loop which quits when the last top widget is closed  
+        #sys.exit(), not needed?  
     
     
     

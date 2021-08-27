@@ -1,4 +1,4 @@
-## InSegtPy
+## insegt(py)
 
 *A py version of [InSegt](https://github.com/vedranaa/InSegt)*
 

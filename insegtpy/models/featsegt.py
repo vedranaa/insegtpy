@@ -290,9 +290,9 @@ class GaussFeatSegtMulti:
 def gauss_features_segmentor(image,
               branching_factor = 5,  # dictionary
               number_layers = 5,  # dictionary
-              number_training_patches = 30000,  # dictionary
+              number_training_vectors = 30000,  # dictionary
               features_sigma = [1,2,4],  # features
-              propagation_patch_size = 9, 
+              propagation_size = 9, 
               propagation_repetitions = 1,  # propagation
               scales = None
               ):
@@ -305,14 +305,14 @@ def gauss_features_segmentor(image,
     
     if scales is None:
         model = GaussFeatSegt(image, 
-                        branching_factor, number_layers, number_training_patches,
+                        branching_factor, number_layers, number_training_vectors,
                         features_sigma, True,  
-                        propagation_patch_size, propagation_repetitions)
+                        propagation_size, propagation_repetitions)
     else:
         model = GaussFeatSegtMulti(image, scales,
-                        branching_factor, number_layers, number_training_patches,
+                        branching_factor, number_layers, number_training_vectors,
                         features_sigma, True,  
-                        propagation_patch_size, propagation_repetitions)
+                        propagation_size, propagation_repetitions)
     return model
 
 

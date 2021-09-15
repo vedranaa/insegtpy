@@ -11,33 +11,36 @@ import insegtpy.models
 import skimage.io
 import matplotlib.pyplot as plt
 
-image = skimage.io.imread('../data/NT2_0512.png') 
+image0 = skimage.io.imread('../data/NT2_0001.png') 
 
 
-
-model = insegtpy.models.gauss_features_segmentor(image, 
+model = insegtpy.models.gauss_features_segmentor(image0, 
                                    branching_factor = 25, 
                                    number_layers = 3,
-                                   features_sigma = [1,2,4,8], 
-                                   number_training_patches = 40000,
-                                   propagation_patch_size = 9, 
-                                   propagation_repetitions=1,
-                                   scales=[1])
+                                   number_training_vectors = 40000,
+                                   features_sigma = [1,2,4,8],
+                                   propagation_size = 9, 
+                                   scales=[1, 0.5, 0.25])
 
-ex = insegtpy.insegt(image, model)
-
+ex = insegtpy.insegt(image0, model)
 
 
 #%% Testing on another image
-im_test = skimage.io.imread('../data/NT2_0512.png')
-prob_test = model.new_image_to_prob(im_test)
+
+prob_image0 = ex.probabilities
+seg_image0 = insegtpy.utils.segment_probabilities(prob_image0)
+
+
+image1 = skimage.io.imread('../data/NT2_0512.png')
+prob_image1 = model.new_image_to_prob(image1)
+seg_image1 = insegtpy.utils.segment_probabilities(prob_image1)
 
 fig, ax = plt.subplots(2, 2, sharex = True, sharey = True )
-ax[0][0].imshow(image)
-ax[1][0].imshow(ex.probabilities[1])
+ax[0][0].imshow(image0)
+ax[1][0].imshow(seg_image0)
 ax[1][0].set_title('Train')
-ax[0][1].imshow(im_test)
-ax[1][1].imshow(prob_test[1])
+ax[0][1].imshow(image1)
+ax[1][1].imshow(seg_image1)
 ax[1][1].set_title('Test')
 
 

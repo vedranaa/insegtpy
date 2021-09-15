@@ -13,7 +13,7 @@ from insegtpy.models.gaussfeat import GaussFeatureExtractor
 import skimage.transform
 
 
-class GaussFeatSegt:
+class OnescaleGaussFeatSegt:
     # Class for single-scale dictionary-based segmentation using Gaussian 
     # features and KD trees.
     def __init__(self, image, 
@@ -141,7 +141,7 @@ class GaussFeatSegt:
         return utils.normalize_probabilities(probabilities)
     
     
-class GaussFeatSegtMulti:
+class GaussFeatSegt:
     # Class for multi-scale dictionary-based segmentation using Gaussian 
     # features and KD trees. Uses single-scale class.
     
@@ -182,14 +182,14 @@ class GaussFeatSegtMulti:
         
         image = utils.normalize_to_float(image)
         self.scales = scales
-        self.segt_list = []
         self.propagation_repetitions = propagation_repetitions
-        for scale in self.scales:
-            image_sc = skimage.transform.rescale(image, scale, preserve_range=True)
-            self.segt_list.append(GaussFeatSegt(image_sc, 
-                        branching_factor, number_layers, number_training_vectors, 
-                        features_sigmas, features_normalize, 
-                        propagation_size, 1))
+        self.segt_list = [OnescaleGaussFeatSegt(skimage.transform.rescale(
+                                        image, scale, preserve_range=True),      
+                                        branching_factor, number_layers, 
+                                        number_training_vectors, 
+                                        features_sigmas, features_normalize,
+                                        propagation_size, 1)
+                          for scale in self.scales]
         self.aditive_parameter = 1e-10
        
             
@@ -304,12 +304,13 @@ def gauss_features_segmentor(image,
     '''
     
     if scales is None:
-        model = GaussFeatSegt(image, 
+        model = OnescaleGaussFeatSegt(image, 
                         branching_factor, number_layers, number_training_vectors,
                         features_sigma, True,  
                         propagation_size, propagation_repetitions)
     else:
-        model = GaussFeatSegtMulti(image, scales,
+        if type(scales) is not list: scales = [scales]
+        model = GaussFeatSegt(image, scales,
                         branching_factor, number_layers, number_training_vectors,
                         features_sigma, True,  
                         propagation_size, propagation_repetitions)

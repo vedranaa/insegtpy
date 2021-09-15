@@ -109,7 +109,7 @@ class Annotator(PyQt5.QtWidgets.QWidget):
                 4*self.imagePix.height()/3),1) # downsize if larger than (2000,1500)
         self.resize(initial_zoom*self.imagePix.width(), 
                     initial_zoom*self.imagePix.height())
-        # self.show() - moved out to wher Annotator is called
+        self.show()
         
         self.showInfo(self.introText(),5000)
         print(self.introText(False))
@@ -189,11 +189,11 @@ class Annotator(PyQt5.QtWidgets.QWidget):
     @classmethod
     def introText(cls, rich = True):
         if rich:
-            return '<i>Starting annotator</i> <br> For help, hit <b>H</b>'
+            s = '<i>Starting annotator</i> <br> For help, hit <b>H</b>'
             #'<hr> ANNOTATOR <br> Copyright (C) 2020 <br> Vedrana A. Dahl'
         else:
-            return "Starting annotator. For help, hit 'H'."
-
+            s = "Starting annotator. For help, hit 'H'."
+        return s
         
     def showHelp(self):
         self.timer.stop()
@@ -454,7 +454,6 @@ class Annotator(PyQt5.QtWidgets.QWidget):
 def annotate(image):
     app = PyQt5.QtWidgets.QApplication([])
     ex = Annotator.fromGrayscale(image)
-    ex.show()
     app.exec()       
  
     
@@ -471,7 +470,7 @@ if __name__ == '__main__':
         filename = sys.argv[1]
         ex = Annotator.fromFilename(filename)
     
-        ex.show()  # is probably better placed here than in init
+        # ex.show() is probably better placed here than in init
         app.exec()
     
         #app.quit(), not needed? exec starts the loop which quits when the last top widget is closed  

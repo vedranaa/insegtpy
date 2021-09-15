@@ -1,1 +1,0 @@
-from insegtpy.models.skbasic import sk_basicfrom insegtpy.models.featsegt import gauss_features_segmentor

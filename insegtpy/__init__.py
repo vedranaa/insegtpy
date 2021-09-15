@@ -1,1 +1,1 @@
-from .annotator import *
+from insegtpy.annotators.insegtannotator import insegt

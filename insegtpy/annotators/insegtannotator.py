@@ -11,87 +11,125 @@ from annotations using a generic processing function.
 
 Use:
     Run from your environmend by passing InSegtAnnotator a grayscale uint8 
-    image and a processing function which given labeling returns segmentation. 
-    Check also example at the bottom of this file.
+    image and a segmentation model with a processing function which given 
+    labeling returns probabilities. 
     
 Author: vand@dtu.dk, 2020
 Created on Sun Oct 11 22:42:32 2020
 
-Todo:
-    * All from annotator.
-    * Showing probability images for probability-based processing function.
-
 GitHub:
-   https://github.com/vedranaa/InSegt/tree/master/pycode
-
+   https://github.com/vedranaa/insegtpy
+   
 """
 
-import annotator
+import insegtpy.annotators.annotator as annotator
 import numpy as np
-import PyQt5.QtCore  
-import skimage.io # this is just to get hold of example image
-import sys
+import PyQt5.QtCore
+import skimage
 
 class InSegtAnnotator(annotator.Annotator):
     
-    def __init__(self, image, processing_function):
+    def __init__(self, image, model):
         '''
-        Initializes InSegtAnnotator given an image and a processing function.
+        Initializes InSegtAnnotator given an image and a segmentation model.
 
         Parameters
         ----------
         image : An image as a 2D array of dtype uint8.
-        processing_function : A processing function which given an annotation 
-            returns a segmentation. Annotation is given as a 2D array of 
-            dtype uint8, where 0 represents unlabeled pixels, and numbers
+        model : An object which has a processing function model.process.  
+            Given an annotation (labeling), processing function returns a
+            probability image. Annotation is given as a 2D array of  dtype 
+            uint8, where 0 represents unlabeled pixels, and numbers
             1 to C represent labelings for diffeerent classes. (In current 
-            impelmentation C<10.) A segmentation is also a 2D array of dytpe
-            uint8.
+            impelmentation C<10.) A probability image is a 3D array with first
+            two dimensions given by the shape of labeling, while the third
+            dimension is given by the number of labels.
+            
         '''
         
         imagePix = self.grayToPixmap(image)
+        self.showProbabilities = 0  # __init__ needs this to set the title
+        self.liveUpdate = True        
+        super().__init__(imagePix.size()) # overwrittes self.imagePix
+        self.imagePix = imagePix
+
         self.segmentationPix = PyQt5.QtGui.QPixmap(imagePix.width(), imagePix.height())
         self.segmentationPix.fill(self.color_picker(label=0, opacity=0))
         self.showImage = True
+ 
+        self.probabilities = np.empty((0,self.imagePix.height(),self.imagePix.width()))
+        self.probabilityPix = PyQt5.QtGui.QPixmap(self.imagePix.width(), self.imagePix.height())
+        self.probabilityPix.fill(self.color_picker(label=0, opacity=0))
 
-        super().__init__(imagePix.size()) # the first drawing happens when init calls show()  
-        
         self.overlays = {0:'both', 1:'annotation', 2:'segmentation'}
         self.annotationOpacity = 0.3
         self.segmentationOpacity = 0.3
-        self.imagePix = imagePix
-        self.processing_function = processing_function
+        self.model = model
+        
+        # check whether model has built-in callable attribute probToSeg 
+        if not (hasattr(self.model, 'probToSeg') and callable(getattr(self.model, 'probToSeg'))):  
+            self.model.probToSeg = self.probToSeg  # default
+                
     
     # METHODS OVERRIDING ANNOTATOR METHODS:                   
     def paintEvent(self, event):
         """ Paint event for displaying the content of the widget."""
         painter_display = PyQt5.QtGui.QPainter(self) # this is painter used for display
         painter_display.setCompositionMode(PyQt5.QtGui.QPainter.CompositionMode_SourceOver)
-        if self.showImage: 
+        if self.showImage:  # start by showing an image
             painter_display.drawPixmap(self.target, self.imagePix, self.source)
-        if self.overlay != 1: # overlay 0 or 2
-            painter_display.drawPixmap(self.target, self.segmentationPix, self.source)
-        if self.overlay != 2: # overlay 0 or 1
-            painter_display.drawPixmap(self.target, self.annotationPix, self.source)
-        if self.showImage:    
+        if self.showProbabilities>0:  # show probilities
+            painter_display.drawPixmap(self.target, self.probabilityPix, self.source)
+        else:  # show annotations and/or segmentation
+            if self.overlay != 1: # overlay 0 or 2
+                    painter_display.drawPixmap(self.target, self.segmentationPix, self.source)
+            if self.overlay != 2: # overlay 0 or 1
+                    painter_display.drawPixmap(self.target, self.annotationPix, self.source)
+        if self.showImage:  # show cursor if image is shown    
             painter_display.drawPixmap(self.target, self.cursorPix, self.source)
-      
+          
+    
     def mouseReleaseEvent(self, event):
         """Segmentation is computed on mouse release."""
+        if self.liveUpdate and (not self.activelyZooming):
+            self.transformLabels()
+            if self.showProbabilities>0:
+                self.updateProbabilityPix()
         super().mouseReleaseEvent(event)
-        self.transformLabels()
         self.update()
         
+    
     def keyPressEvent(self, event):
         """Adding events to annotator"""   
         if event.key()==PyQt5.QtCore.Qt.Key_I:
-            if self.showImage:          
+            if self.showImage:  # not to react for consecutive keypress events while holding key          
                 self.showImage = False
                 self.update()
-                self.showInfo('Turned off show image')
+                self.showInfo('Turned off show image')              
+        elif event.key()==PyQt5.QtCore.Qt.Key_P: 
+            self.showProbabilities = (self.showProbabilities+1)%(self.probabilities.shape[0]+1)
+            if self.showProbabilities:
+                self.updateProbabilityPix()
+                self.showInfo(f'Showing probability for label {self.showProbabilities}')
+            else:
+                self.showInfo('Not showing probabilities')
+            self.setTitle()
+        elif event.key()==PyQt5.QtCore.Qt.Key_L: 
+            self.liveUpdate = not self.liveUpdate
+            if self.liveUpdate:
+                self.showInfo('Turned on live update')
+                self.transformLabels()
+                if self.showProbabilities:
+                    self.updateProbabilityPix()
+                self.update()
+            else:
+                self.showInfo('Turned off live update')
+            self.setTitle()
         else:
             super().keyPressEvent(event)
-    
+            
+            
+  
     def keyReleaseEvent(self, event):
         """Adding events to annotator"""   
         if event.key()==PyQt5.QtCore.Qt.Key_I: # i
@@ -101,14 +139,52 @@ class InSegtAnnotator(annotator.Annotator):
         else:
             super().keyReleaseEvent(event)
     
+    
+    def setTitle(self):
+        title = f'pen:{self.label}, width:{self.penWidth}, showing:'
+        if self.showProbabilities:
+            title += f'P{self.showProbabilities}'
+        else:
+            title += f'{self.overlays[self.overlay]}'
+        title += ', live '
+        if self.liveUpdate:
+            title += 'on'
+        else:
+            title += 'off'
+        self.setWindowTitle(title)
+            
+    
+    # HELPING METHODS
     def transformLabels(self):
         """Transforming pixmap annotation to pixmap segmentation."""        
         annotations = self.pixmapToArray(self.annotationPix) # numpy RGBA: height x width x 4, values uint8      
         labels = self.rgbaToLabels(annotations) # numpy labels: height x width, values 0 to N uint8    
-        segmentation = self.processing_function(labels) # numpy labels: height x width, values 0 to N uint8
+        self.probabilities = self.model.process(labels) # numpy labels: height x width, values 0 to N uint8
+        
+        segmentation = self.model.probToSeg(self.probabilities)
         segmentation_rgba = self.labelsToRgba(segmentation, 
                                               self.segmentationOpacity) # numpy RGBA: height x width x 4, values uint8  
         self.segmentationPix = self.rgbaToPixmap(segmentation_rgba)    # final pixmap    
+        
+        if(self.showProbabilities > self.probabilities.shape[0]): # removed a label for which we show probaiblity
+            self.showProbabilities = 0
+            self.showInfo('Not showing probabilities')
+        
+    
+    def updateProbabilityPix(self):
+        rgba = self.probabilityToRgba(self.probabilities[self.showProbabilities-1])
+        self.probabilityPix = self.rgbaToPixmap(rgba)
+            
+    
+    @staticmethod
+    def probabilityToRgba(probabilityLayer):
+        mask = (probabilityLayer > 0.5).astype(np.float)
+        probabilityColor = np.asarray([2*(1-mask)*probabilityLayer + mask, 
+                                       1-2*np.abs(probabilityLayer-0.5), 
+                                       mask*(1-2*probabilityLayer) + 1,
+                                       np.ones(mask.shape)*0.5]).transpose(1,2,0)
+        return (255*probabilityColor).astype(np.uint8)
+    
     
     @staticmethod
     def savePixmap(pixmap, filenamebase, gray):
@@ -125,6 +201,7 @@ class InSegtAnnotator(annotator.Annotator):
         skimage.io.imsave(filenamebase + '_overlay.png', 
                           overlay.astype(np.uint8), check_contrast=False)                 
          
+    
     def saveOutcome(self):
         gray = self.pixmapToArray(self.imagePix) # numpy RGBA: height x width x 4, values uint8 
         skimage.io.imsave('gray.png', gray[:,:,:1], check_contrast=False)   
@@ -132,14 +209,17 @@ class InSegtAnnotator(annotator.Annotator):
         self.savePixmap(self.segmentationPix, 'segmentations', gray)
         self.showInfo('Saved annotations and segmentations in various data types')        
     
+    
     helpText = (
         '<i>Help for InSegt Annotator</i> <br>' 
         '<b>KEYBOARD COMMANDS:</b> <br>' 
-        '&nbsp; &nbsp; <b>1</b> to <b>9</b> changes pen label (L) <br>' 
+        '&nbsp; &nbsp; <b>1</b> to <b>9</b> changes pen label <br>' 
         '&nbsp; &nbsp; <b>0</b> eraser mode <br>' 
-        '&nbsp; &nbsp; <b>&uarr;</b> and <b>&darr;</b> changes pen width (W) <br>' 
-        '&nbsp; &nbsp; <b>O</b> changes overlay <br>' 
+        '&nbsp; &nbsp; <b>&uarr;</b> and <b>&darr;</b> changes pen width <br>' 
+        '&nbsp; &nbsp; <b>L</b> toggles live update <br>' 
+        '&nbsp; &nbsp; <b>O</b> cycles between overlay settings <br>' 
         '&nbsp; &nbsp; <b>I</b> held down hides image <br>'
+        '&nbsp; &nbsp; <b>P</b> cycles between probability views  <br>'
         '&nbsp; &nbsp; <b>Z</b> held down enables zoom <br>' 
         '&nbsp; &nbsp; <b>Z</b> pressed resets zoom <br>' 
         '&nbsp; &nbsp; <b>S</b> saves results <br>' 
@@ -148,13 +228,14 @@ class InSegtAnnotator(annotator.Annotator):
         '&nbsp; &nbsp; Draws annotation <br>' 
         '&nbsp; &nbsp; Zooms when zoom enabled')
     
+    
     @classmethod
     def introText(cls, rich = True):
         if rich:
-            s = "<i>Starting InSegt Annotator</i> <br> For help, hit <b>H</b>"
+            return "<i>Starting InSegt Annotator</i> <br> For help, hit <b>H</b>"
         else:
-            s = "Starting InSegt Annotator. For help, hit 'H'."
-        return s        
+            return "Starting InSegt Annotator. For help, hit 'H'."
+        
      
     # for INSEGT, it is IMPORTANT that background is [0,0,0], otherwise rgbToLabels return wrong labels.
     # I therefore re-define collors, such that possible changes in annotator do not destroy InSegt
@@ -219,56 +300,36 @@ class InSegtAnnotator(annotator.Annotator):
         qpixmap = InSegtAnnotator.rgbaToPixmap(rgba)
         return qpixmap
     
-    
-    
-if __name__ == '__main__':    
-    
-    '''
-    An example on the use of InSegtAnnotator. An image to be may be a rgb 
-    image, but InSegtAnnotator needs to be given its grayscale version. As
-    shown below, this does not prevent the processing function to use rgb 
-    values of the image.
-    '''
-    
-    # defining processing function
-    def processing_function(labels):
+    @staticmethod
+    def probToSeg(probabilities):
+        '''Probabilities to segmentation using max-prob approach.
         '''
-        The simplest processing function for rgb images (computes a mean color for
-            each label and assigns pixels to label with color closest to pixel color)
-    
-        Parameters:
-            labels, 2D array with labels as uin8 (0 is background)
-        Returns:
-            segmentation, array of the same size and type as labels
+        segmentation = np.zeros(probabilities.shape[1:], dtype=np.uint8)  # max 255 labels
+        if probabilities.shape[0]>1:
+            p = np.sum(probabilities, axis=0)
+            np.argmax(probabilities, axis=0, out=segmentation)
+            segmentation += 1
+            segmentation[p==0] = 0
+        elif probabilities.shape[0]==1:
+            segmentation[probabilities[0]>0] = 1
+        return segmentation
         
-        Author: vand@dtu.dk
+
+def insegt(image, processing_function):
+    '''
+    image : grayscale image given as (r,c) numpy array of type uint8 
+    processing_function : a functiobn which given label image of size (r,c)
+        returns segmentation image
+    '''
+    app = PyQt5.QtWidgets.QApplication([])
+    ex = InSegtAnnotator(image, processing_function)
+    ex.show()
+    app.exec()
+    return(ex)
     
-        '''   
-        N = labels.max()
-        L = 1 if image.ndim==2 else image.shape[2]
-        # mean color for every label
-        lable_colors = np.array([np.mean(image[labels==n],0) 
-                                      for n in range(N+1)])
-        # pixel-to-color distances for all pixels and all labels
-        dist = ((image.reshape((-1 ,1, L)) - lable_colors.reshape((1, 
-                                        N+1, L)))**2).sum(axis=2)
-        empty_labels = np.isnan(dist)
-        if np.any(empty_labels): # handling unlabeled parts
-            dist[empty_labels] = dist[~empty_labels].max()+1 
-        # assigning to min distance
-        segmentation = np.empty(labels.shape, dtype=np.uint8)
-        np.argmin(dist, axis=1, out=segmentation.ravel())
-        return(segmentation)
+   
+
     
     
-    # loading image
-    print('Loading image')
-    image = skimage.data.astronaut()
-    image_gray = image if image.ndim==2 else (255*skimage.color.rgb2gray(image)
-                                              ).astype(np.uint8)  
     
-    print('Showtime')    
-    # showtime
-    app = PyQt5.QtWidgets.QApplication(['']) 
-    ex = InSegtAnnotator(image_gray, processing_function)
-    sys.exit(app.exec_())  
+    

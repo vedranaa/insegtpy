@@ -6,10 +6,10 @@ Created on Fri Aug 27 12:30:39 2021
 @author: vand
 """
 
-import insegtpy
+import insegtpy.annotators.annotator
 import skimage.data 
 
 image = skimage.data.camera()
-insegtpy.annotate(image)
+insegtpy.annotators.annotator.annotate(image)
 
 

@@ -4,7 +4,7 @@
 
 Instalation:
 * Download the code
-* pip install -/path/to/insegtpy/folder/containing/setup.py
+* pip install -/path/to/insegtpy/folder/containing/setup.py/
 
 Contains:
 

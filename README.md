@@ -14,7 +14,9 @@ Input image | User labelings | Segmentation result | Screenshot
 * pip install -/path/to/insegtpy/folder/containing/setup.py/
 
 
-### Contains
+### Use
+
+InSegt has an interactive annotator (implemented in `insegtpy\annotators`) and, most importantly, a segmentation model. We have developed a range of segmentation models, and for some of them we provide more than one segmentation. Choosing an appropriate model may require expertise, so take a look at the provided noteboos and demos to find an example that resembles your problem. Some of the good places to start are listed here.  
 
 #### Python scripts
 

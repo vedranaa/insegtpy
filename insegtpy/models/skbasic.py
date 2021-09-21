@@ -74,6 +74,15 @@ def image2assignment(image, patch_size, nr_clusters, nr_training_patches):
             max_iter = 10, batch_size = 3*nr_clusters)
     kmeans.fit(patches_subset.T)
     assignment = kmeans.predict(patches.T)
+    return (assignment.reshape((image.shape[0] - patch_size + 1, 
+                               image.shape[1] - patch_size + 1)),
+            kmeans)
+
+def new_image2assignment(image, kmeans):
+    """ Extract and assign image patches using pre-clustered k-means."""
+    patch_size = int(np.sqrt(kmeans.cluster_centers_.shape[1]))
+    patches = ndimage2patches(image, patch_size)
+    assignment = kmeans.predict(patches.T)
     return assignment.reshape((image.shape[0] - patch_size + 1, 
                                image.shape[1] - patch_size + 1))
 
@@ -158,39 +167,59 @@ def gray_cool(nr_classes):
 
 def patch_clustering(image, patch_size, nr_training_patches, nr_clusters):
     """"InSegt preprocessing function: clustering, assignment and transformations."""
-    assignment = image2assignment(image, patch_size,
+    assignment, kmeans = image2assignment(image, patch_size,
             nr_clusters, nr_training_patches)
     B = assignment2biadjacency(assignment, image.shape, patch_size, nr_clusters)
     T1, T2 = biadjacency2transformations(B)
-    return T1, T2
+    return T1, T2, kmeans
 
 
 def two_binarized(labels, T1, T2):
     """InSegt processing function: from labels to probabilities."""
     nr_classes = np.max(labels)    
     labcol = labels2labcol(labels, nr_classes=nr_classes) # columns with binary labels
-    probcol = T2*((T1)*labcol) # first linear diffusion
+    probcol = T2 * ((T1) * labcol) # first linear diffusion
     probcol = np.asarray(probcol.todense()) # columns with probabilities
     labcol = probcol2labcol(probcol) # binarizing labels
-    probcol = T2*((T1)*labcol) # second linear diffusion
+    dict_labels = T1 * labcol
+    probcol = T2*dict_labels # second linear diffusion
     probcol = np.asarray(probcol.todense())
     probabilities = np.transpose(probcol.reshape(labels.shape + (-1,)), (2,0,1))
-    return probabilities 
+    return probabilities, dict_labels 
 
 
 # A CLASS FOR SEGMENTATION METHOD
 class SkBasic:
     ''' A class for basic processing, to comply with insegt.
     '''
-    
+
     def __init__(self, image, patch_size, nr_training_patches, nr_clusters):
-        T1, T2 = patch_clustering(image, patch_size, 
+        T1, T2, kmeans = patch_clustering(image, patch_size, 
                         nr_training_patches, nr_clusters)
         self.T1 = T1
         self.T2 = T2
+        self.kmeans = kmeans
+        
+        self.dict_labels = None
     
     def process(self, labels):
-        return two_binarized(labels, self.T1, self.T2)
+        probabilities, dict_labels = two_binarized(labels, self.T1, self.T2)
+        self.dict_labels = dict_labels
+        return probabilities
+    
+    def new_image_to_prob(self, image):
+        this_assignment = new_image2assignment(image, self.kmeans)
+        
+        patch_size = int(np.sqrt(self.kmeans.cluster_centers_.shape[1]))
+        nr_clusters = self.kmeans.cluster_centers_.shape[0]
+
+        B = assignment2biadjacency(this_assignment, image.shape, patch_size, nr_clusters)
+        _, T2 = biadjacency2transformations(B)
+        probcol = T2 * self.dict_labels 
+        probcol = np.asarray(probcol.todense())
+        probabilities = np.transpose(probcol.reshape(image.shape[:2] + (-1,)), (2,0,1))
+        return probabilities
+
 
 def sk_basic(image, patch_size=3, nr_training_patches=1000, nr_clusters=100):
     ''' Convenience function to create SkBasic segmentation model

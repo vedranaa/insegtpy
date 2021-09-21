@@ -43,3 +43,10 @@ clicks, draws, and keyboard input. Help is accessed by pressing **H**. Built-in 
 * `demo_km.py`, a demo showing the use of k-means clustering. Uses the module `km_dict.py`, which relies on `km_dict.cpp` compiled into `km_dict_lib.so`.
 
 * `demo_feat.py`, a demo showing feature-based segmentation. Uses the module `feat_seg.py` which relies on `image_feat.cpp` compiled into `image_feat_lib.so`.
+
+#### Jupyter notebooks
+
+* `notebooks/Multiscale Gauss features InSegt on nerves.ipynp`
+* `notebooks/Patch-based non-interactive fibre segmentation.ipynp`
+* `notebooks/Volumetric InSegt on nerves.ipynp`
+

@@ -16,9 +16,9 @@ Input image | User labelings | Segmentation result | Screenshot
 
 
 
-Contains:
+### Contains:
 
-* `demo_insegt.py`, a demo script showing how `insegtannotator` together with `insegtbasic` may be used for interactive segmentation.
+* `demos/skbasic_glasfibre_demo.py`, a demo script showing how `insegtannotator` together with `insegtbasic` may be used for interactive segmentation.
 
 
 * `insegtbasic.py`, a module providing basic InSegt image processing functionality. Features (and differences compared to matlab version):

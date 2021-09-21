@@ -6,26 +6,26 @@ Given lited labeling of an image, InSegt can provide full segmentation of this, 
 
 Input image | User labelings | Segmentation result | Screenshot
 :---:|:---:|:---:|:---:
-<img src="screenshots/glass/gray.png" width = "250">  |  <img src="screenshots/glass/annotations_overlay.png" width = "250"> | <img src="screenshots/glass/segmentations_overlay.png" width = "250"> | <img src="screenshots/glass/screenshot.png" width = "250">
+<img src="screenshots/glass/gray.png" width = "200">  |  <img src="screenshots/glass/annotations_overlay.png" width = "200"> | <img src="screenshots/glass/segmentations_overlay.png" width = "200"> | <img src="screenshots/glass/screenshot.png" width = "200">
 
 
-### Instalation:
+### Instalation
 * Download the code
 * pip install -/path/to/insegtpy/folder/containing/setup.py/
 
 
+### Use
 
+InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a range of segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. Choosing an appropriate model may require expertise, so take a look at the provided Jupyter noteboos and python scripts to find an example that resembles your problem. 
 
-### Contains:
+Furthermore, a model needs to be initiated with suitable parameters. Choosing parameters often requires experiments. Here, it is a good idea to start with a small image. 
 
-* `demos/skbasic_glasfibre_demo.py`, a demo script showing how `insegtannotator` together with `insegtbasic` may be used for interactive segmentation.
+#### Python scripts
 
+* `demos/skbasic_glasfibre_demo.py`, a demo script showing how insegt may be used with basic insegt model for interactive segmentation. This model relies on scikit-learn python package, so it may be
+used if cpp code is misbihaving. As examples we use CT image of glass fibres. 
 
-* `insegtbasic.py`, a module providing basic InSegt image processing functionality. Features (and differences compared to matlab version):
-   - Purely python. (In matlab, we use mex files written in C++.)
-   - It uses intensities from image patches as features for clustering. (In matlab, we have: patch-based, normalized patches, SIFT features, PCA features, Gaussian-derivative features.)
-   - Uses minibatch k-means from sklearn for clustering. (In matlab, we use k-means tree.)
-   - Unlabeled pixels have zeros in label images. (In matlab, we distribute the probabilities to all classes if a pixel is unlabeled. We need to figure out what's best, and whether it matters.)
+* `demos/gaussfeat_nerve_demo.py`, a demo script showing how to use multiscale segmentation based on Gaussian features clustered in KM tree. As examples we use CT nerves image. 
 
 * `demo_insegtbasic.py`, a demo script that processes an image using functionality from `insegtbasic.py`.
    - In particular, it uses `insegtbasic.patch_clustering` function for building the dictionary and `insegtbasic.two_binarized` function for processing the label image into a segmentation image.
@@ -47,3 +47,10 @@ clicks, draws, and keyboard input. Help is accessed by pressing **H**. Built-in 
 * `demo_km.py`, a demo showing the use of k-means clustering. Uses the module `km_dict.py`, which relies on `km_dict.cpp` compiled into `km_dict_lib.so`.
 
 * `demo_feat.py`, a demo showing feature-based segmentation. Uses the module `feat_seg.py` which relies on `image_feat.cpp` compiled into `image_feat_lib.so`.
+
+#### Jupyter notebooks
+
+* `notebooks/Multiscale Gauss features InSegt on nerves.ipynp`
+* `notebooks/Patch-based non-interactive fibre segmentation.ipynp`
+* `notebooks/Volumetric InSegt on nerves.ipynp`
+

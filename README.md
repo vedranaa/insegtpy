@@ -9,12 +9,14 @@ Input image | User labelings | Segmentation result | Screenshot
 <img src="screenshots/glass/gray.png" width = "200">  |  <img src="screenshots/glass/annotations_overlay.png" width = "200"> | <img src="screenshots/glass/segmentations_overlay.png" width = "200"> | <img src="screenshots/glass/screenshot.png" width = "200">
 
 
-### Instalation:
+### Instalation
 * Download the code
 * pip install -/path/to/insegtpy/folder/containing/setup.py/
 
 
-### Contains:
+### Contains
+
+#### Python scripts
 
 * `demos/skbasic_glasfibre_demo.py`, a demo script showing how insegt may be used with basic insegt model for interactive segmentation. This model relies on scikit-learn python package, so it may be
 used if cpp code is misbihaving. As examples we use CT image of glass fibres. 

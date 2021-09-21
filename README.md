@@ -16,7 +16,7 @@ Input image | User labelings | Segmentation result | Screenshot
 
 ### Use
 
-InSegt has an interactive annotator (implemented in `insegtpy\annotators`) and, most importantly, a segmentation model. We have developed a range of segmentation models (placed in `insegtpy\models`), and for some of them we provide more than one segmentation. Choosing an appropriate model may require expertise, so take a look at the provided Jupyter noteboos and python scripts to find an example that resembles your problem. 
+InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a range of segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. Choosing an appropriate model may require expertise, so take a look at the provided Jupyter noteboos and python scripts to find an example that resembles your problem. 
 
 Furthermore, a model needs to be initiated with suitable parameters. Choosing parameters often requires experiments. Here, it is a good idea to start with a small image. 
 

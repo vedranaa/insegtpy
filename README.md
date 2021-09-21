@@ -6,7 +6,7 @@ Given lited labeling of an image, InSegt can provide full segmentation of this, 
 
 Input image | User labelings | Segmentation result | Screenshot
 :---:|:---:|:---:|:---:
-<img src="screenshots/glass/gray.png" width = "250">  |  <img src="screenshots/glass/annotations_overlay.png" width = "250"> | <img src="screenshots/glass/segmentations_overlay.png" width = "250"> | <img src="screenshots/glass/screenshot.png" width = "250">
+<img src="screenshots/glass/gray.png" width = "200">  |  <img src="screenshots/glass/annotations_overlay.png" width = "200"> | <img src="screenshots/glass/segmentations_overlay.png" width = "200"> | <img src="screenshots/glass/screenshot.png" width = "200">
 
 
 ### Instalation:

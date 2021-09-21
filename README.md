@@ -9,7 +9,7 @@ Input image | User labelings | Segmentation result | Screenshot
 <img src="screenshots/glass/gray.png" width = "250">  |  <img src="screenshots/glass/annotations_overlay.png" width = "250"> | <img src="screenshots/glass/segmentations_overlay.png" width = "250"> | <img src="screenshots/glass/screenshot.png" width = "250">
 
 
-Instalation:
+### Instalation:
 * Download the code
 * pip install -/path/to/insegtpy/folder/containing/setup.py/
 

@@ -2,17 +2,24 @@
 
 *A py version of [InSegt](https://github.com/vedranaa/InSegt)*
 
+Given lited labeling of an image, InSegt can provide full segmentation of this, or similar, image.
+
+Input image | User labelings | Segmentation result | Screenshot
+:---:|:---:|:---:|:---:
+<img src="screenshots/glass/gray.png" width = "250">  |  <img src="screenshots/glass/annotations_overlay.png" width = "250"> | <img src="screenshots/glass/segmentations_overlay.png" width = "250"> | <img src="screenshots/glass/screenshot.png" width = "250">
+
+
 Instalation:
 * Download the code
 * pip install -/path/to/insegtpy/folder/containing/setup.py/
+
+
+
 
 Contains:
 
 * `demo_insegt.py`, a demo script showing how `insegtannotator` together with `insegtbasic` may be used for interactive segmentation.
 
-Input image | User labelings | Segmentation result | Screenshot
-:---:|:---:|:---:|:---:
-<img src="screenshots/glass/gray.png" width = "250">  |  <img src="screenshots/glass/annotations_overlay.png" width = "250"> | <img src="screenshots/glass/segmentations_overlay.png" width = "250"> | <img src="screenshots/glass/screenshot.png" width = "250">
 
 * `insegtbasic.py`, a module providing basic InSegt image processing functionality. Features (and differences compared to matlab version):
    - Purely python. (In matlab, we use mex files written in C++.)

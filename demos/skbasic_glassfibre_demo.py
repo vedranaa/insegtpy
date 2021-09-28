@@ -18,6 +18,7 @@ image = skimage.io.imread('../data/glass.png')
 model = insegtpy.models.sk_basic(image, 
                               patch_size=9, 
                               nr_training_patches=10000, 
-                              nr_clusters=100)
+                              nr_clusters=100,
+                              propagation_repetitions=2)
 insegtpy.insegt(image, model)
 

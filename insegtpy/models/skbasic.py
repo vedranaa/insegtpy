@@ -7,17 +7,8 @@ intensities from image patches as features for clustering. For clustering it
 uses minibatch k-means from sklarn. Unlabeled pixels have zeros in label 
 images. 
 
-More on insegt method:
-    https://github.com/vedranaa/InSegt
 
-Use:
-    Check the example in demo_insegtbasic.py.
-    
-Created on Sun Mar  1 13:08:33 2020
 Author: vand@dtu.dk, 2020
-
-.. _InSegt basic:
-   https://github.com/vedranaa/InSegt/tree/master/pycode
 
 """
 
@@ -26,8 +17,10 @@ import matplotlib.pyplot as plt
 import matplotlib.colors
 import sklearn.cluster
 import scipy.sparse
+import insegtpy.models.segt as segt
 
 # HELPING FUNCTIONS
+# (originaly written for use without annotator)
 
 def image2patches(image, patch_size, stepsize=1):
     """Rearrange image patches into columns
@@ -78,7 +71,7 @@ def image2assignment(image, patch_size, nr_clusters, nr_training_patches):
                                image.shape[1] - patch_size + 1)),
             kmeans)
 
-def new_image2assignment(image, kmeans):
+def new2assignment(image, kmeans):
     """ Extract and assign image patches using pre-clustered k-means."""
     patch_size = int(np.sqrt(kmeans.cluster_centers_.shape[1]))
     patches = ndimage2patches(image, patch_size)
@@ -155,7 +148,7 @@ def probcol2labcol(probcol):
                     (np.where(nonempty)[0], l)),
                     shape=probcol.shape).tocsr()
     return labcol
-    
+
 
 def gray_cool(nr_classes):
     """ Colormap as in original InSegt """
@@ -187,70 +180,99 @@ def two_binarized(labels, T1, T2):
     probabilities = np.transpose(probcol.reshape(labels.shape + (-1,)), (2,0,1))
     return probabilities, dict_labels 
 
+def single_update(labels, T1, T2, nr_classes=None):
+    """InSegt processing function: from labels to probabilities."""
+    if nr_classes is None: nr_classes = np.max(labels)    
+    labcol = labels2labcol(labels, nr_classes=nr_classes) # columns with binary labels
+    dict_labels = T1 * labcol
+    probcol = T2*dict_labels # second linear diffusion
+    probcol = np.asarray(probcol.todense())
+    probabilities = np.transpose(probcol.reshape(labels.shape + (-1,)), (2,0,1))
+    return probabilities, dict_labels 
 
-# A CLASS FOR SEGMENTATION METHOD
-class SkBasic:
+def new2probs(image, kmeans, dict_labels):
+    this_assignment = new2assignment(image, kmeans)
+        
+    patch_size = int(np.sqrt(kmeans.cluster_centers_.shape[1]))
+    nr_clusters = kmeans.cluster_centers_.shape[0]
+
+    B = assignment2biadjacency(this_assignment, image.shape, patch_size, nr_clusters)
+    T2 = biadjacency2transformations(B)[1]
+    probcol = T2 * dict_labels 
+    probcol = np.asarray(probcol.todense())
+    return np.transpose(probcol.reshape(image.shape[:2] + (-1,)), (2,0,1))
+    
+    
+# MAKING ALL OF THIS WORK WITH INSEGT
+class SkBasic(segt.Segt):
     ''' A class for basic processing, to comply with insegt.
     '''
 
     def __init__(self, image, patch_size, nr_training_patches, nr_clusters):
+        
         T1, T2, kmeans = patch_clustering(image, patch_size, 
                         nr_training_patches, nr_clusters)
         self.T1 = T1
         self.T2 = T2
         self.kmeans = kmeans
-        
+
         self.dict_labels = None
     
-    def process(self, labels):
-        probabilities, dict_labels = two_binarized(labels, self.T1, self.T2)
+    def process(self, labels, nr_classes=None):
+        probabilities, dict_labels = single_update(labels, self.T1, self.T2, nr_classes)
         self.dict_labels = dict_labels
         return probabilities
     
-    def new_image_to_prob(self, image):
-        this_assignment = new_image2assignment(image, self.kmeans)
+    def segment_new(self, image):
         
-        patch_size = int(np.sqrt(self.kmeans.cluster_centers_.shape[1]))
-        nr_clusters = self.kmeans.cluster_centers_.shape[0]
+        return new2probs(image, self.kmeans, self.dict_labels)
+       
 
-        B = assignment2biadjacency(this_assignment, image.shape, patch_size, nr_clusters)
-        _, T2 = biadjacency2transformations(B)
-        probcol = T2 * self.dict_labels 
-        probcol = np.asarray(probcol.todense())
-        probabilities = np.transpose(probcol.reshape(image.shape[:2] + (-1,)), (2,0,1))
-        return probabilities
-
-
-def sk_basic(image, patch_size=3, nr_training_patches=1000, nr_clusters=100):
-    ''' Convenience function to create SkBasic segmentation model
-    '''    
-    model = SkBasic(image, patch_size, nr_training_patches, nr_clusters)
+def sk_basic(image, patch_size=3, nr_training_patches=1000, nr_clusters=100, 
+             scales=None, propagation_repetitions=None):
+    ''' Convenience function to create a model based on SkBasic. '''    
+    
+    if scales is None or scales==1 or scales==[1]:
+        print('Bulding single-scale SkBasic model')
+        model = SkBasic(image, patch_size, nr_training_patches, nr_clusters)
+    else:
+        print('Bulding multi-scale SkBasic model')
+        if type(scales) is not list: scales = [scales]
+        model_init = lambda im: SkBasic(im, patch_size, 
+                                        nr_training_patches, nr_clusters)
+        model = segt.Multiscale(image, scales, model_init)
+        
+    if propagation_repetitions and propagation_repetitions>1:
+        print('Adding propagation repetitions.')
+        model = segt.Repeated(model, propagation_repetitions)
+        
     return model
-
+    
+        
 
 if __name__ == '__main__':
 
-# Example use    
+# Example use without annotator (and without Segt)   
+
     import PIL
     import utils
-    
     
     # Read image and labels.
     image = np.array(PIL.Image.open('../../data/glass.png'))
     labels = np.array(PIL.Image.open('../../data/glass_labels.png'))
     nr_classes = np.max(labels)
-    
+        
     # Chooose settings.
     patch_size = 9
     nr_training_patches = 10000 # number of randomly extracted patches for clustering
     nr_clusters = 1000 # number of dictionary clusters
     
     # Pre-process.
-    T1, T2 = patch_clustering(image, patch_size, nr_training_patches, nr_clusters)
+    T1, T2 = patch_clustering(image, patch_size, nr_training_patches, nr_clusters)[:2]
     
     # Process.
-    probabilities = two_binarized(labels, T1, T2)
-    segmentation = utils.segment_probabilities(probabilities)
+    probabilities = two_binarized(labels, T1, T2)[0]
+    segmentation  = utils.segment_probabilities(probabilities)
     
     # Visualize.
     fig, ax = plt.subplots(1, 3, sharex = True, sharey = True, figsize=(15,5))

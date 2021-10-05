@@ -1,6 +1,5 @@
 import insegtpy.models.utils as utils
 import numpy as np
-import cv2
 
 
 class Segt():

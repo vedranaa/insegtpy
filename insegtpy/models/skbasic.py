@@ -71,6 +71,7 @@ def image2assignment(image, patch_size, nr_clusters, nr_training_patches):
                                image.shape[1] - patch_size + 1)),
             kmeans)
 
+
 def new2assignment(image, kmeans):
     """ Extract and assign image patches using pre-clustered k-means."""
     patch_size = int(np.sqrt(kmeans.cluster_centers_.shape[1]))
@@ -180,6 +181,7 @@ def two_binarized(labels, T1, T2):
     probabilities = np.transpose(probcol.reshape(labels.shape + (-1,)), (2,0,1))
     return probabilities, dict_labels 
 
+
 def single_update(labels, T1, T2, nr_classes=None):
     """InSegt processing function: from labels to probabilities."""
     if nr_classes is None: nr_classes = np.max(labels)    
@@ -189,6 +191,7 @@ def single_update(labels, T1, T2, nr_classes=None):
     probcol = np.asarray(probcol.todense())
     probabilities = np.transpose(probcol.reshape(labels.shape + (-1,)), (2,0,1))
     return probabilities, dict_labels 
+
 
 def new2probs(image, kmeans, dict_labels):
     this_assignment = new2assignment(image, kmeans)
@@ -233,10 +236,10 @@ def sk_basic(image, patch_size=3, nr_training_patches=1000, nr_clusters=100,
     ''' Convenience function to create a model based on SkBasic. '''    
     
     if scales is None or scales==1 or scales==[1]:
-        print('Bulding single-scale SkBasic model')
+        print('Bulding single-scale SkBasic model.')
         model = SkBasic(image, patch_size, nr_training_patches, nr_clusters)
     else:
-        print('Bulding multi-scale SkBasic model')
+        print('Bulding multi-scale SkBasic model.')
         if type(scales) is not list: scales = [scales]
         model_init = lambda im: SkBasic(im, patch_size, 
                                         nr_training_patches, nr_clusters)

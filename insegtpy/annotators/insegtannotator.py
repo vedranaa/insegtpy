@@ -25,7 +25,7 @@ GitHub:
 import insegtpy.annotators.annotator as annotator
 import numpy as np
 import PyQt5.QtCore
-import skimage
+import PIL
 
 class InSegtAnnotator(annotator.Annotator):
     
@@ -65,6 +65,7 @@ class InSegtAnnotator(annotator.Annotator):
         self.annotationOpacity = 0.3
         self.segmentationOpacity = 0.3
         self.model = model
+        self.saveAddress = ''
         
         # check whether model has built-in callable attribute probToSeg 
         if not (hasattr(self.model, 'probToSeg') and callable(getattr(self.model, 'probToSeg'))):  
@@ -186,28 +187,30 @@ class InSegtAnnotator(annotator.Annotator):
         return (255*probabilityColor).astype(np.uint8)
     
     
-    @staticmethod
-    def savePixmap(pixmap, filenamebase, gray):
+    @classmethod
+    def savePixmap(cls, pixmap, filenamebase, gray):
         """Helping function for saving annotation and segmentation pixmaps."""
-        pixmap.save(filenamebase + '_pixmap.png', 'png')
+        # pixmap.save(filenamebase + '_pixmap.png', 'png')
         rgba = InSegtAnnotator.pixmapToArray(pixmap) # numpy RGBA: height x width x 4, values uint8      
-        skimage.io.imsave(filenamebase + '_rgb.png', rgba[:,:,:3], 
-                          check_contrast=False)   
-        labels = InSegtAnnotator.rgbaToLabels(rgba) # numpy labels: height x width, values 0 to N uint8    
-        skimage.io.imsave(filenamebase + '_index.png', 30*labels, 
-                          check_contrast=False) # 30*8 = 240<255     
+        # PIL.Image.fromarray(rgba).save(filenamebase + '_rgba.png') # same outcome as saving pixmap
+        labels = InSegtAnnotator.rgbaToLabels(rgba) # numpy labels: height x width, values 0 to N uint8
+        palette = [c for c in cls.colors.ravel()] + (256*3 - cls.colors.size)*[127]
+        
+        I = PIL.Image.fromarray(labels, mode='P')
+        I.putpalette(palette)
+        I.save(filenamebase + '_index.png')
+        
         alpha = (rgba[:,:,3:].astype(np.float))/255
         overlay = gray[:,:,:3]*(1-alpha) + rgba[:,:,:3]*(alpha)
-        skimage.io.imsave(filenamebase + '_overlay.png', 
-                          overlay.astype(np.uint8), check_contrast=False)                 
+        PIL.Image.fromarray(overlay.astype(np.uint8)).save(filenamebase + '_overlay.png') 
          
     
     def saveOutcome(self):
         gray = self.pixmapToArray(self.imagePix) # numpy RGBA: height x width x 4, values uint8 
-        skimage.io.imsave('gray.png', gray[:,:,:1], check_contrast=False)   
-        self.savePixmap(self.annotationPix, 'annotations', gray)
-        self.savePixmap(self.segmentationPix, 'segmentations', gray)
-        self.showInfo('Saved annotations and segmentations in various data types')        
+        # PIL.Image.fromarray(gray[:,:,0]).save(self.saveAddress + 'gray.png')
+        self.savePixmap(self.annotationPix, self.saveAddress + 'annotations', gray)
+        self.savePixmap(self.segmentationPix, self.saveAddress + 'segmentations', gray)
+        self.showInfo('Saved annotations and segmentations in various formats')        
     
     
     helpText = (

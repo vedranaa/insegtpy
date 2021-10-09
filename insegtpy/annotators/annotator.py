@@ -46,7 +46,6 @@ class Annotator(PyQt5.QtWidgets.QWidget):
             size = PyQt5.QtCore.QSize(256,256)
         elif type(size) is tuple:
             size = PyQt5.QtCore.QSize(size[0],size[1])
-        self.annotationsFilename = 'empty.png'
             
         # Pixmap layers
         self.imagePix = PyQt5.QtGui.QPixmap(size.width(), size.height()) 
@@ -103,6 +102,9 @@ class Annotator(PyQt5.QtWidgets.QWidget):
         self.timer = PyQt5.QtCore.QTimer()
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self.hideText)
+        
+        # Filename for saving annotations
+        self.saveAddress = 'annotations.png'
 
         # Playtime
         initial_zoom = min(2000/max(self.imagePix.width(), 
@@ -420,8 +422,8 @@ class Annotator(PyQt5.QtWidgets.QWidget):
     #     # should also check: https://github.com/spyder-ide/spyder/wiki/How-to-run-PyQt-applications-within-Spyder
    
     def saveOutcome(self):
-        self.annotationPix.save(self.annotationsFilename, 'png')
-        self.showInfo(f'Saved annotations as {self.annotationsFilename}')
+        self.annotationPix.save(self.saveAddress)
+        self.showInfo(f'Saved annotations as {self.saveAddress}')
         
     # colors associated with different labels
     colors = [

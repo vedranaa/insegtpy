@@ -241,6 +241,7 @@ def sk_basic(image, patch_size=3, nr_training_patches=1000, nr_clusters=100,
     else:
         print('Bulding multi-scale SkBasic model.')
         if type(scales) is not list: scales = [scales]
+        
         model_init = lambda im: SkBasic(im, patch_size, 
                                         nr_training_patches, nr_clusters)
         model = segt.Multiscale(image, scales, model_init)

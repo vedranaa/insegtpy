@@ -15,6 +15,8 @@ import skimage.io
 
 
 image = skimage.io.imread('../data/glass.png') 
+
+# single-scale model
 model = insegtpy.models.sk_basic(image, 
                               patch_size=9, 
                               nr_training_patches=10000, 

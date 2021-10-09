@@ -5,13 +5,15 @@ import numpy as np
 class Segt():
     ''' Base class for image segmentation model.'''
         
-    def process(self, labels):
+    def process(self, labels, nr_classes=None):
         ''' Needs to be implemented for use with InSegtAnnotator.'''       
         pass
      
     def segment_new(self, image):
         ''' Needs to be implemented for processing a new image.'''
         pass
+    
+    
 
 class Repeated(Segt):
     ''' Class providing repeated update.'''
@@ -29,7 +31,7 @@ class Repeated(Segt):
             labels = utils.segment_probabilities(probs)
             probs = self.onestep_segt.process(labels, nr_classes)  
         
-        return utils.normalize_probabilities(probs)
+        return utils.normalize_to_one(probs)
     
     def segment_new(self, image):
         return self.onestep_segt.segment_new(image)

@@ -45,14 +45,16 @@ def normalize_to_float(image):
 #     return labels
     
 
-def labels_to_onehot(labels):
+def labels_to_onehot(labels, nr_labels = None):
     ''' 
     From (r,c) image containing values 0 to N into onehot labels (r,c,N+1).
+    N is either computed as the largest value in labels or given by nr_labels.
     Onehot labels have all zeros in unlabeled pixels, i.e. pixels that had
-    value 0.
-    '''
+    value 0. 
     
-    nr_labels = labels.max()
+    '''
+    if nr_labels is None: nr_labels = labels.max()
+    
     lmat = np.concatenate((np.zeros((1,nr_labels)), np.eye(nr_labels)))
     labels = lmat[labels].transpose((2, 0, 1))
     return labels
@@ -65,6 +67,7 @@ def segment_probabilities(probabilities):
     segmentation = np.zeros(probabilities.shape[1:], dtype=np.uint8)  # max 255 labels
     if probabilities.shape[0]>1:
         uncertain = probabilities.sum(axis=0)==0
+        # TODO concider adding uncertain = (probabilities == probabilities[0]).all(axis=0)
         np.argmax(probabilities, axis=0, out=segmentation)
         segmentation += 1
         segmentation[uncertain] = 0
@@ -73,7 +76,7 @@ def segment_probabilities(probabilities):
     return segmentation
     
 
-def normalize_probabilities(probabilities):
+def normalize_to_one(probabilities):
     '''
     Normalize labels probabilities to sum to 1 in all image pixels with
     nonzero probabilities. If a pixel has zeros for all label 

@@ -32,7 +32,7 @@ seg_image0 = insegtpy.utils.segment_probabilities(prob_image0)
 
 
 image1 = skimage.io.imread('../data/NT2_0512.png')
-prob_image1 = model.new_image_to_prob(image1)
+prob_image1 = model.segment_new(image1)
 seg_image1 = insegtpy.utils.segment_probabilities(prob_image1)
 
 fig, ax = plt.subplots(2, 2, sharex = True, sharey = True )

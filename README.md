@@ -16,9 +16,13 @@ Input image | User labelings | Segmentation result | Screenshot
 
 ### Use
 
-InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a range of segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. Choosing an appropriate model may require expertise, so take a look at the provided Jupyter noteboos and python scripts to find an example that resembles your problem. 
+InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a few different segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. Choosing an appropriate model may require expertise, so take a look at the provided Jupyter noteboos and python scripts to find an example that resembles your problem. 
 
 Furthermore, a model needs to be initiated with suitable parameters. Choosing parameters often requires experiments. Here, it is a good idea to start with a small image. 
+
+The models are:
+- skbasic, also available in multi-scale version
+- gauss feature segmentor, also available in multi-scale version
 
 #### Python scripts
 
@@ -38,7 +42,7 @@ Furthermore, a model needs to be initiated with suitable parameters. Choosing pa
 * `notebooks/Patch-based non-interactive fibre segmentation.ipynp`
 * `notebooks/Volumetric InSegt on nerves.ipynp`
 
-#### Other code
+#### Other leftovers
 * `demo_insegtbasic_processing_explained.py`, similar to  the demo above, but the processing implemented in `insegtbasic.two_binarized` is divided into steps and visualized in more detail.
   - In particular, here you have access to assignment image and the probability images for different labels.
 

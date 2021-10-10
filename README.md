@@ -16,14 +16,17 @@ Input image | User labelings | Segmentation result | Screenshot
 
 ### Use
 
-InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a range of segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. Choosing an appropriate model may require expertise, so take a look at the provided Jupyter noteboos and python scripts to find an example that resembles your problem. 
+InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a few different segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. Choosing an appropriate model may require expertise, so take a look at the provided Jupyter noteboos and python scripts to find an example that resembles your problem. 
 
 Furthermore, a model needs to be initiated with suitable parameters. Choosing parameters often requires experiments. Here, it is a good idea to start with a small image. 
 
+The models are:
+- skbasic, also available in multi-scale version
+- gauss feature segmentor, also available in multi-scale version
+
 #### Python scripts
 
-* `demos/skbasic_glasfibre_demo.py`, a demo script showing how insegt may be used with basic insegt model for interactive segmentation. This model relies on scikit-learn python package, so it may be
-used if cpp code is misbihaving. As examples we use CT image of glass fibres. 
+* `demos/skbasic_glassfibre_demo.py`, a demo script showing how insegt may be used with basic insegt model for interactive segmentation. This model relies on scikit-learn python package, so it may be used if cpp code is misbihaving. As examples we use CT image of glass fibres. 
 
 * `demos/gaussfeat_nerve_demo.py`, a demo script showing how to use multiscale segmentation based on Gaussian features clustered in KM tree. As examples we use CT nerves image. 
 
@@ -33,7 +36,13 @@ used if cpp code is misbihaving. As examples we use CT image of glass fibres.
 
 <div align="center"><img src="screenshots/demo_insegtbasic.png" width = "750"></div>
 
+#### Jupyter notebooks
 
+* `notebooks/Multiscale Gauss features InSegt on nerves.ipynp`
+* `notebooks/Patch-based non-interactive fibre segmentation.ipynp`
+* `notebooks/Volumetric InSegt on nerves.ipynp`
+
+#### Other leftovers
 * `demo_insegtbasic_processing_explained.py`, similar to  the demo above, but the processing implemented in `insegtbasic.two_binarized` is divided into steps and visualized in more detail.
   - In particular, here you have access to assignment image and the probability images for different labels.
 
@@ -47,10 +56,3 @@ clicks, draws, and keyboard input. Help is accessed by pressing **H**. Built-in 
 * `demo_km.py`, a demo showing the use of k-means clustering. Uses the module `km_dict.py`, which relies on `km_dict.cpp` compiled into `km_dict_lib.so`.
 
 * `demo_feat.py`, a demo showing feature-based segmentation. Uses the module `feat_seg.py` which relies on `image_feat.cpp` compiled into `image_feat_lib.so`.
-
-#### Jupyter notebooks
-
-* `notebooks/Multiscale Gauss features InSegt on nerves.ipynp`
-* `notebooks/Patch-based non-interactive fibre segmentation.ipynp`
-* `notebooks/Volumetric InSegt on nerves.ipynp`
-

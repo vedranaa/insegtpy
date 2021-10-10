@@ -195,7 +195,7 @@ class InSegtAnnotator(annotator.Annotator):
         # PIL.Image.fromarray(rgba).save(filenamebase + '_rgba.png') # same outcome as saving pixmap
         labels = InSegtAnnotator.rgbaToLabels(rgba) # numpy labels: height x width, values 0 to N uint8
         palette = [c for c in cls.colors.ravel()] + (256*3 - cls.colors.size)*[127]
-        
+        palette[:3] = [127, 127, 127] # such that background is gray not black       
         I = PIL.Image.fromarray(labels, mode='P')
         I.putpalette(palette)
         I.save(filenamebase + '_index.png')
@@ -240,8 +240,9 @@ class InSegtAnnotator(annotator.Annotator):
             return "Starting InSegt Annotator. For help, hit 'H'."
         
      
-    # for INSEGT, it is IMPORTANT that background is [0,0,0], otherwise rgbToLabels return wrong labels.
-    # I therefore re-define collors, such that possible changes in annotator do not destroy InSegt
+    # for INSEGT, it is IMPORTANT that background is [0,0,0], otherwise rgbToLabels 
+    # return wrong labels. (Because full opacity in pixmap has rgb 0.) I therefore 
+    # re-define collors, such that possible changes in annotator do not destroy InSegt
     # (and also I use numpy here)
     colors = np.array([
         [0, 0, 0], 
@@ -318,7 +319,7 @@ class InSegtAnnotator(annotator.Annotator):
         return segmentation
         
 
-def insegt(image, processing_function):
+def insegt(image, processing_function, labels=None):
     '''
     image : grayscale image given as (r,c) numpy array of type uint8 
     processing_function : a functiobn which given label image of size (r,c)
@@ -326,7 +327,14 @@ def insegt(image, processing_function):
     '''
     app = PyQt5.QtWidgets.QApplication([])
     ex = InSegtAnnotator(image, processing_function)
+    
+    if labels is not None:
+        ex.annotationPix = PyQt5.QtGui.QPixmap(ex.rgbaToPixmap(
+            ex.labelsToRgba(labels, opacity=ex.annotationOpacity)))
+        ex.transformLabels()
+   
     ex.show()
+    
     app.exec()
     return(ex)
     

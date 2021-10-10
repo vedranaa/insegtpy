@@ -8,40 +8,50 @@ Created on Fri Apr 23 08:27:35 2021
 
 import insegtpy
 import insegtpy.models
-import skimage.io
+import PIL
+import numpy as np
 import matplotlib.pyplot as plt
 
-image0 = skimage.io.imread('../data/NT2_0001.png') 
-
-
-model = insegtpy.models.gauss_features_segmentor(image0, 
-                                   branching_factor = 25, 
-                                   number_layers = 3,
-                                   number_training_vectors = 40000,
+image = np.array(PIL.Image.open('../data/NT2_0001.png'))
+model = insegtpy.models.gauss_features_segmentor(image, 
+                                   branching_factor = 12, 
+                                   number_layers = 4,
+                                   number_training_vectors = 100000,
                                    features_sigma = [1,2,4,8],
-                                   propagation_size = 9, 
-                                   scales=[1, 0.5, 0.25])
+                                   propagation_size = 15, 
+                                   scales=[1, 0.7, 0.5])
 
-ex = insegtpy.insegt(image0, model)
+# Now you can choose ONE of the three ways of using the model: A, B, or C.
+
+# #%% A: Interactive use
+# ex = insegtpy.insegt(image, model)
+#      #  ... interaction
+# seg = insegtpy.utils.segment_probabilities(ex.probabilities) 
+
+# #%% B: Interactive starting with pre-prepared labeling
+# labels = np.array(PIL.Image.open('../data/NT2_0001_labels.png'))
+# ex = insegtpy.insegt(image, model, labels=labels)
+#      #  ... interaction
+# seg = insegtpy.utils.segment_probabilities(ex.probabilities) 
+
+
+#%% C: Non-interactive use
+labels = np.array(PIL.Image.open('../data/NT2_0001_labels.png'))
+seg = insegtpy.utils.segment_probabilities(model.process(labels))
 
 
 #%% Testing on another image
 
-prob_image0 = ex.probabilities
-seg_image0 = insegtpy.utils.segment_probabilities(prob_image0)
-
-
-image1 = skimage.io.imread('../data/NT2_0512.png')
-prob_image1 = model.segment_new(image1)
-seg_image1 = insegtpy.utils.segment_probabilities(prob_image1)
-
+image_new = np.array(PIL.Image.open('../data/NT2_0512.png'))
+prob_new = model.segment_new(image_new)
+seg_new = insegtpy.utils.segment_probabilities(prob_new)
 fig, ax = plt.subplots(2, 2, sharex = True, sharey = True )
-ax[0][0].imshow(image0)
-ax[1][0].imshow(seg_image0)
-ax[1][0].set_title('Train')
-ax[0][1].imshow(image1)
-ax[1][1].imshow(seg_image1)
-ax[1][1].set_title('Test')
+ax[0][0].imshow(image)
+ax[1][0].imshow(seg)
+ax[1][0].set_title('Trained')
+ax[0][1].imshow(image_new)
+ax[1][1].imshow(seg_new)
+ax[1][1].set_title('New')
 
 
 

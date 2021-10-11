@@ -16,14 +16,11 @@ Input image | User labelings | Segmentation result | Screenshot
 
 ### Use
 
-InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a few different segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. Choosing an appropriate model may require expertise, so take a look at the provided Jupyter noteboos and python scripts to find an example that resembles your problem. 
+InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a few different segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. For help with choosing an appropriate model and suitable parameters, take a look at the provided Jupyter noteboos and python scripts. 
 
-Furthermore, a model needs to be initiated with suitable parameters. Choosing parameters often requires experiments. Here, it is a good idea to start with a small image. 
-
-The models are:
-- skbasic, also available in multi-scale version
-- gauss feature segmentor, also available in multi-scale version
-
+Models are built using two functions: 
+- `sk_basic_segmentor` uses intensities from image patches as features clustered using minibatch k-means from sklearn. The model also available in multi-scale version.
+- `gauss_features_segmentor` uses (multi-sigma) Gauss features clustered using km-tree. Also available in multi-scale version.
 #### Python scripts
 
 * `demos/skbasic_glassfibre_demo.py`, a demo script showing how insegt may be used with basic insegt model for interactive segmentation. This model relies on scikit-learn python package, so it may be used if cpp code is misbihaving. As examples we use CT image of glass fibres. 

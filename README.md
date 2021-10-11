@@ -47,10 +47,8 @@ Models are built using two functions:
 ## How InSegt works
 
 InSegt preforms:
-- Dense feature extraction. This may be intensities collected around every pixels, or other features computed in every image pixel.
-- Feature clustering. This uses sing some variant of k-means clustering to cluster image features.
-- Creating relations. This established relations between image pixels based on clustering.
-- Propagating labeling. 
-
+- Dense feature extraction. This may be intensities collected around every pixels, or other features computed in every image pixel. In fibre example below we extract patches around each pixel, so features are not extracted from boundary pixels.
+- Feature clustering. This uses sing some variant of k-means clustering to cluster image features. The *assignment* image shows the outcome of pixel clustering.
+- Propagating labeling. This propagates user-provided partial labelling (*labels*) according to the assignment. The outcome of propagation is a probability image for every label class (here *probability label 1* and *2*). Thresholding probability image yields *segmentation*.
 
 <div align="center"><img src="screenshots/demo_insegtbasic_explained.png" width = "750"></div>

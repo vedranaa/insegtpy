@@ -13,6 +13,10 @@ Input image | User labelings | Segmentation result | Screenshot
 * Download the code
 * pip install -/path/to/insegtpy/folder/containing/setup.py/
 
+### How InSegt works
+
+<div align="center"><img src="screenshots/demo_insegtbasic_explained.png" width = "750"></div>
+
 
 ### Use
 
@@ -21,18 +25,12 @@ InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, 
 Models are built using two functions: 
 - `sk_basic_segmentor` uses intensities from image patches as features clustered using minibatch k-means from scikit-learn. Is also available in multi-scale version.
 - `gauss_features_segmentor` uses (multi-sigma) Gauss features clustered using km-tree. Also available in multi-scale version.
-- 
+
 #### Python demos
 
 * `demos/skbasic_glassfibre_demo.py`, a demo script where `sk_basic_segmentor` is uesd for detecting fibres in a CT image of glass fibres. A good place to start, and should also run regardles of whether cpp code is misbihaving. 
 
 * `demos/gaussfeat_nerve_demo.py`, a demo script showing how to use multiscale segmentation with `gauss_features_segmentor`. As examples we use CT nerves image. 
-
-* `demo_insegtbasic.py`, a demo script that processes an image using functionality from `insegtbasic.py`.
-   - In particular, it uses `insegtbasic.patch_clustering` function for building the dictionary and `insegtbasic.two_binarized` function for processing the label image into a segmentation image.
-   - No interaction! Instead, you load an image to be segmented, and an image of the same size containing the user labeling.
-
-<div align="center"><img src="screenshots/demo_insegtbasic.png" width = "750"></div>
 
 #### Jupyter notebooks
 
@@ -40,17 +38,12 @@ Models are built using two functions:
 * `notebooks/Patch-based non-interactive fibre segmentation.ipynp`
 * `notebooks/Volumetric InSegt on nerves.ipynp`
 
-#### Other leftovers
-* `demo_insegtbasic_processing_explained.py`, similar to  the demo above, but the processing implemented in `insegtbasic.two_binarized` is divided into steps and visualized in more detail.
-  - In particular, here you have access to assignment image and the probability images for different labels.
+#### Other code and leftovers
 
-<div align="center"><img src="screenshots/demo_insegtbasic_explained.png" width = "750"></div>
+* `annotators/annotator.py`, a module containing the `Annotator` class. `Annotator`, is a widget for drawing on an image. It is based on [qt for python](https://doc.qt.io/qtforpython/). All interaction is using mouse clicks, draws, and keyboard input. Help is accessed by pressing **H**.  Demo script `deomos/only_insegtannotator_demo.py` uses an image from `skimage.data`.
 
-* `annotator.py`, a module containing the `Annotator` class. `Annotator`, is a widget for drawing on an image. It is based on [qt for python](https://doc.qt.io/qtforpython/). All interaction is using mouse
-clicks, draws, and keyboard input. Help is accessed by pressing **H**. Built-in example uses an image from `skimage.data`.
+* `annotators/insegtannotator.py`, a module containing `InSegtAnnotator` class, which is a subclass of `Annotator` extended with the functionality for interactive segmentation. To use `InsegtAnnotator` you need a processing function that given labels (annotations) returns a  segmentation.  Demo script `deomos/only_insegtannotator_demo.py` uses an image from `skimage.data` and a processing function based on a mean color for every label, and a pixel-to-color distance.
 
-* `insegtannotator.py`, a module containing `InSegtAnnotator` class, which is a subclass of `Annotator` extended with the functionality for interactive segmentation. To use `InsegtAnnotator` you need a processing function that given labels (annotations) returns a  segmentation.  Built-in example uses an image from `skimage.data` and a processing function based on a mean color for every label, and a pixel-to-color distance.
+* The main of `models/kmdict.py`, shows the use of km tree for clustering, here exemplified on patches from an image of carbon fibres. Relies on `km_dict.cpp` compiled into `km_dict_lib.so`.
 
-* `demo_km.py`, a demo showing the use of k-means clustering. Uses the module `km_dict.py`, which relies on `km_dict.cpp` compiled into `km_dict_lib.so`.
-
-* `demo_feat.py`, a demo showing feature-based segmentation. Uses the module `feat_seg.py` which relies on `image_feat.cpp` compiled into `image_feat_lib.so`.
+* The mail of `models/gaussfeat.py` shows extraction of Gauss features from the image.

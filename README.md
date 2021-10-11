@@ -46,4 +46,11 @@ Models are built using two functions:
 
 ## How InSegt works
 
+InSegt preforms:
+- Dense feature extraction. This may be intensities collected around every pixels, or other features computed in every image pixel.
+- Feature clustering. This uses sing some variant of k-means clustering to cluster image features.
+- Creating relations. This established relations between image pixels based on clustering.
+- Propagating labeling. 
+
+
 <div align="center"><img src="screenshots/demo_insegtbasic_explained.png" width = "750"></div>

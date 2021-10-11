@@ -19,13 +19,14 @@ Input image | User labelings | Segmentation result | Screenshot
 InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a few different segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. For help with choosing an appropriate model and suitable parameters, take a look at the provided Jupyter noteboos and python scripts. 
 
 Models are built using two functions: 
-- `sk_basic_segmentor` uses intensities from image patches as features clustered using minibatch k-means from sklearn. The model also available in multi-scale version.
+- `sk_basic_segmentor` uses intensities from image patches as features clustered using minibatch k-means from scikit-learn. Is also available in multi-scale version.
 - `gauss_features_segmentor` uses (multi-sigma) Gauss features clustered using km-tree. Also available in multi-scale version.
-#### Python scripts
+- 
+#### Python demos
 
-* `demos/skbasic_glassfibre_demo.py`, a demo script showing how insegt may be used with basic insegt model for interactive segmentation. This model relies on scikit-learn python package, so it may be used if cpp code is misbihaving. As examples we use CT image of glass fibres. 
+* `demos/skbasic_glassfibre_demo.py`, a demo script where `sk_basic_segmentor` is uesd for detecting fibres in a CT image of glass fibres. A good place to start, and should also run regardles of whether cpp code is misbihaving. 
 
-* `demos/gaussfeat_nerve_demo.py`, a demo script showing how to use multiscale segmentation based on Gaussian features clustered in KM tree. As examples we use CT nerves image. 
+* `demos/gaussfeat_nerve_demo.py`, a demo script showing how to use multiscale segmentation with `gauss_features_segmentor`. As examples we use CT nerves image. 
 
 * `demo_insegtbasic.py`, a demo script that processes an image using functionality from `insegtbasic.py`.
    - In particular, it uses `insegtbasic.patch_clustering` function for building the dictionary and `insegtbasic.two_binarized` function for processing the label image into a segmentation image.

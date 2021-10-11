@@ -1,4 +1,4 @@
-## insegt(py)
+# insegt(py)
 
 *A py version of [InSegt](https://github.com/vedranaa/InSegt)*
 
@@ -9,16 +9,12 @@ Input image | User labelings | Segmentation result | Screenshot
 <img src="screenshots/glass/gray.png" width = "200">  |  <img src="screenshots/glass/annotations_overlay.png" width = "200"> | <img src="screenshots/glass/segmentations_overlay.png" width = "200"> | <img src="screenshots/glass/screenshot.png" width = "200">
 
 
-### Instalation
+## Instalation
 * Download the code
 * pip install -/path/to/insegtpy/folder/containing/setup.py/
 
-### How InSegt works
 
-<div align="center"><img src="screenshots/demo_insegtbasic_explained.png" width = "750"></div>
-
-
-### Use
+## Use
 
 InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a few different segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. For help with choosing an appropriate model and suitable parameters, take a look at the provided Jupyter noteboos and python scripts. 
 
@@ -47,3 +43,7 @@ Models are built using two functions:
 * The main of `models/kmdict.py`, shows the use of km tree for clustering, here exemplified on patches from an image of carbon fibres. Relies on `km_dict.cpp` compiled into `km_dict_lib.so`.
 
 * The mail of `models/gaussfeat.py` shows extraction of Gauss features from the image.
+
+## How InSegt works
+
+<div align="center"><img src="screenshots/demo_insegtbasic_explained.png" width = "750"></div>

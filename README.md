@@ -30,8 +30,8 @@ Models are built using two functions:
 
 #### Jupyter notebooks
 
-* `notebooks/Multiscale Gauss features InSegt on nerves.ipynp`
 * `notebooks/Patch-based non-interactive fibre segmentation.ipynp`
+* `notebooks/Multiscale Gauss features InSegt on nerves.ipynp`
 * `notebooks/Volumetric InSegt on nerves.ipynp`
 
 #### Other code and leftovers

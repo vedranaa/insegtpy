@@ -36,13 +36,11 @@ Models are built using two functions:
 
 #### Other code and leftovers
 
-* `annotators/annotator.py`, a module containing the `Annotator` class. `Annotator`, is a widget for drawing on an image. It is based on [qt for python](https://doc.qt.io/qtforpython/). All interaction is using mouse clicks, draws, and keyboard input. Help is accessed by pressing **H**.  Demo script `deomos/only_insegtannotator_demo.py` uses an image from `skimage.data`.
-
-* `annotators/insegtannotator.py`, a module containing `InSegtAnnotator` class, which is a subclass of `Annotator` extended with the functionality for interactive segmentation. To use `InsegtAnnotator` you need a processing function that given labels (annotations) returns a  segmentation.  Demo script `deomos/only_insegtannotator_demo.py` uses an image from `skimage.data` and a processing function based on a mean color for every label, and a pixel-to-color distance.
-
 * The main of `models/kmdict.py`, shows the use of km tree for clustering, here exemplified on patches from an image of carbon fibres. Relies on `km_dict.cpp` compiled into `km_dict_lib.so`.
 
-* The mail of `models/gaussfeat.py` shows extraction of Gauss features from the image.
+* The mail of `models/gaussfeat.py` shows extraction of Gauss features from the image.* `annotators/annotator.py`, a module containing the `Annotator` class. `Annotator`, is a widget for drawing on an image. It is based on [qt for python](https://doc.qt.io/qtforpython/). All interaction is using mouse clicks, draws, and keyboard input. Help is accessed by pressing **H**.  Demo script `deomos/only_insegtannotator_demo.py` uses an image from `skimage.data`.
+
+* `annotators/insegtannotator.py`, a module containing `InSegtAnnotator` class, which is a subclass of `Annotator` extended with the functionality for interactive segmentation. To use `InsegtAnnotator` you need a processing function that given labels (annotations) returns a  segmentation.  Demo script `deomos/only_insegtannotator_demo.py` uses an image from `skimage.data` and a processing function based on a mean color for every label, and a pixel-to-color distance.
 
 ## How InSegt works
 

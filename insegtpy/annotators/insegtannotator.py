@@ -326,8 +326,6 @@ def insegt(image, processing_function):
     ex.show()
     app.exec()
     return(ex)
-    
-   
 
     
     

@@ -449,6 +449,9 @@ class Annotator(PyQt5.QtWidgets.QWidget):
         coords =  rect.getCoords()
         s = f'({coords[0]},{coords[1]})--({coords[2]},{coords[3]})'
         return(s)     
+    
+    def closeEvent(self,event):
+        PyQt5.QtWidgets.QApplication.quit()
  
     
 def annotate(image):

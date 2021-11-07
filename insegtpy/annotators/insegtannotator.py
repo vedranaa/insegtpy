@@ -25,7 +25,7 @@ GitHub:
 import insegtpy.annotators.annotator as annotator
 import numpy as np
 import PyQt5.QtCore
-import skimage
+import PIL
 
 class InSegtAnnotator(annotator.Annotator):
     
@@ -65,6 +65,7 @@ class InSegtAnnotator(annotator.Annotator):
         self.annotationOpacity = 0.3
         self.segmentationOpacity = 0.3
         self.model = model
+        self.saveAddress = ''
         
         # check whether model has built-in callable attribute probToSeg 
         if not (hasattr(self.model, 'probToSeg') and callable(getattr(self.model, 'probToSeg'))):  
@@ -186,28 +187,30 @@ class InSegtAnnotator(annotator.Annotator):
         return (255*probabilityColor).astype(np.uint8)
     
     
-    @staticmethod
-    def savePixmap(pixmap, filenamebase, gray):
+    @classmethod
+    def savePixmap(cls, pixmap, filenamebase, gray):
         """Helping function for saving annotation and segmentation pixmaps."""
-        pixmap.save(filenamebase + '_pixmap.png', 'png')
+        # pixmap.save(filenamebase + '_pixmap.png', 'png')
         rgba = InSegtAnnotator.pixmapToArray(pixmap) # numpy RGBA: height x width x 4, values uint8      
-        skimage.io.imsave(filenamebase + '_rgb.png', rgba[:,:,:3], 
-                          check_contrast=False)   
-        labels = InSegtAnnotator.rgbaToLabels(rgba) # numpy labels: height x width, values 0 to N uint8    
-        skimage.io.imsave(filenamebase + '_index.png', 30*labels, 
-                          check_contrast=False) # 30*8 = 240<255     
+        # PIL.Image.fromarray(rgba).save(filenamebase + '_rgba.png') # same outcome as saving pixmap
+        labels = InSegtAnnotator.rgbaToLabels(rgba) # numpy labels: height x width, values 0 to N uint8
+        palette = [c for c in cls.colors.ravel()] + (256*3 - cls.colors.size)*[127]
+        palette[:3] = [127, 127, 127] # such that background is gray not black       
+        I = PIL.Image.fromarray(labels, mode='P')
+        I.putpalette(palette)
+        I.save(filenamebase + '_index.png')
+        
         alpha = (rgba[:,:,3:].astype(np.float))/255
         overlay = gray[:,:,:3]*(1-alpha) + rgba[:,:,:3]*(alpha)
-        skimage.io.imsave(filenamebase + '_overlay.png', 
-                          overlay.astype(np.uint8), check_contrast=False)                 
+        PIL.Image.fromarray(overlay.astype(np.uint8)).save(filenamebase + '_overlay.png') 
          
     
     def saveOutcome(self):
         gray = self.pixmapToArray(self.imagePix) # numpy RGBA: height x width x 4, values uint8 
-        skimage.io.imsave('gray.png', gray[:,:,:1], check_contrast=False)   
-        self.savePixmap(self.annotationPix, 'annotations', gray)
-        self.savePixmap(self.segmentationPix, 'segmentations', gray)
-        self.showInfo('Saved annotations and segmentations in various data types')        
+        # PIL.Image.fromarray(gray[:,:,0]).save(self.saveAddress + 'gray.png')
+        self.savePixmap(self.annotationPix, self.saveAddress + 'annotations', gray)
+        self.savePixmap(self.segmentationPix, self.saveAddress + 'segmentations', gray)
+        self.showInfo('Saved annotations and segmentations in various formats')        
     
     
     helpText = (
@@ -237,8 +240,9 @@ class InSegtAnnotator(annotator.Annotator):
             return "Starting InSegt Annotator. For help, hit 'H'."
         
      
-    # for INSEGT, it is IMPORTANT that background is [0,0,0], otherwise rgbToLabels return wrong labels.
-    # I therefore re-define collors, such that possible changes in annotator do not destroy InSegt
+    # for INSEGT, it is IMPORTANT that background is [0,0,0], otherwise rgbToLabels 
+    # return wrong labels. (Because full opacity in pixmap has rgb 0.) I therefore 
+    # re-define collors, such that possible changes in annotator do not destroy InSegt
     # (and also I use numpy here)
     colors = np.array([
         [0, 0, 0], 
@@ -315,7 +319,7 @@ class InSegtAnnotator(annotator.Annotator):
         return segmentation
         
 
-def insegt(image, processing_function):
+def insegt(image, processing_function, labels=None):
     '''
     image : grayscale image given as (r,c) numpy array of type uint8 
     processing_function : a functiobn which given label image of size (r,c)
@@ -323,7 +327,14 @@ def insegt(image, processing_function):
     '''
     app = PyQt5.QtWidgets.QApplication([])
     ex = InSegtAnnotator(image, processing_function)
+    
+    if labels is not None:
+        ex.annotationPix = PyQt5.QtGui.QPixmap(ex.rgbaToPixmap(
+            ex.labelsToRgba(labels, opacity=ex.annotationOpacity)))
+        ex.transformLabels()
+   
     ex.show()
+    
     app.exec()
     return(ex)
 

@@ -4,8 +4,7 @@
 
 This module provides basic InSegt image processing functionallity. It uses 
 intensities from image patches as features for clustering. For clustering it
-uses minibatch k-means from sklarn. Unlabeled pixels have zeros in label 
-images. 
+uses minibatch k-means from sklearn. 
 
 
 Author: vand@dtu.dk, 2020
@@ -231,7 +230,7 @@ class SkBasic(segt.Segt):
         return new2probs(image, self.kmeans, self.dict_labels)
        
 
-def sk_basic(image, patch_size=3, nr_training_patches=1000, nr_clusters=100, 
+def sk_basic_segmentor(image, patch_size=3, nr_training_patches=1000, nr_clusters=100, 
              scales=None, propagation_repetitions=None):
     ''' Convenience function to create a model based on SkBasic. '''    
     

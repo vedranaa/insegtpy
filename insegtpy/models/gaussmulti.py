@@ -450,8 +450,8 @@ class GaussMultiImage:
             for i in range(n_label):
                 dict_sum += dict_prop.probability_dictionary[:,i*nelem_patch:(i+1)*nelem_patch]
             dict_sum = np.tile(dict_sum, (1, n_label))
-            dict_prop.probability_dictionary /= (dict_sum + 1e-10)
-            dict_prop.probability_dictionary /= (1 - 1e-10)
+            dict_prop.probability_dictionary /= (dict_sum + 1e-1)
+            dict_prop.probability_dictionary /= (1 - 1e-1)
         #     # Compute the probability at current scale
         #     probability = dict_prop.dictprob_to_improb(assignment)
         #     probability_max = getMaxP(probability)
@@ -469,10 +469,61 @@ class GaussMultiImage:
         # probability_new /= p_sum
         
         # return probability_new
+    
+    
+    def optimize_constraint(self, this_dict_propagator, assignments, residuals, alpha, beta):
+        '''
+        Optimizing the dictionary according to residuals.
+
+        Parameters
+        ----------
+        this_dict_propagator : DictionaryPropagatorScale object 
+            Object that allows for computing residual dictionary.
+        assignments : List of numpy arrays
+            Assignemnts for one image.
+        residuals : List of numpy arrays
+            Residual images.
+        alpha : Float
+            Determines how much the dictionary should be updated (learning rate).
+        beta : Float
+            Determines how much of a one-hot encoded image should be included
+            in the probability image.
+
+        Returns
+        -------
+        probability_new : numpy array
+            Updated probability image.
+
+        '''
+        this_dict_propagator.improb_to_dictprob_scales(assignments, residuals) # computes the image probability
+        probability_new = np.ones(residuals[0].shape) # The output probability image
+        for dict_prop, this_dict_prop, assignment in zip(self.dict_prop_sc.propagators, this_dict_propagator.propagators, assignments):            
+            # Difference in probability dictionaries
+            diff_prob_dict = dict_prop.probability_dictionary - this_dict_prop.probability_dictionary
+            # Update the probability dictionary
+            dict_prop.probability_dictionary = (dict_prop.probability_dictionary - alpha*diff_prob_dict)/(1 - alpha)
+            # Normalize
+            nelem_dict = dict_prop.probability_dictionary.shape[0]
+            nelem_patch = self.propagation_size**2
+            n_label = dict_prop.probability_dictionary.shape[1]//nelem_patch
+            dict_sum = np.zeros((nelem_dict, nelem_patch))
+            for i in range(n_label):
+                dict_sum += dict_prop.probability_dictionary[:,i*nelem_patch:(i+1)*nelem_patch]
+            dict_sum = np.tile(dict_sum, (1, n_label))
+            dict_prop.probability_dictionary /= (dict_sum + 1e-1)
+            dict_prop.probability_dictionary /= (1 - 1e-1)
+            dict_prop.probability_dictionary[dict_prop.probability_dictionary<0] = 0
+            dict_prop.probability_dictionary[dict_prop.probability_dictionary>1] = 1
+            dict_sum = np.zeros((nelem_dict, nelem_patch))
+            for i in range(n_label):
+                dict_sum += dict_prop.probability_dictionary[:,i*nelem_patch:(i+1)*nelem_patch]
+            dict_sum = np.tile(dict_sum, (1, n_label))
+            dict_prop.probability_dictionary /= (dict_sum + 1e-1)
+            dict_prop.probability_dictionary /= (1 - 1e-1)
         
     
     def optimize_dictionaries(self, assignments_list, labels, probability_list = None, alpha = 0.01, 
-                              beta = 0.5, n_iter = 1, verbose = True):
+                              beta = 0.5, n_iter = 1, verbose = True, noconstraint = True):
         '''
         Optimize dictionaries from assigments and labels
 
@@ -529,7 +580,10 @@ class GaussMultiImage:
                 residuals = []
                 for s in self.scales:
                     residuals.append(utils.imscale(residual, scale = s))
-                self.optimize(this_dict_propagator, assignments, residuals, alpha = alpha, beta = beta)
+                if noconstraint:
+                    self.optimize(this_dict_propagator, assignments, residuals, alpha = alpha, beta = beta)
+                else:
+                    self.optimize_constraint(this_dict_propagator, assignments, residuals, alpha = alpha, beta = beta)
                 # probability_list[i] = self.optimize(this_dict_propagator, assignments, residuals, alpha = alpha, beta = beta)
                 if verbose:
                     probability = self.dict_prop_sc.dictprob_to_improb_scales([assignments])

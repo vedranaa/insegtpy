@@ -231,6 +231,8 @@ class InSegtAnnotator(annotator.Annotator):
         '&nbsp; &nbsp; Draws annotation <br>' 
         '&nbsp; &nbsp; Zooms when zoom enabled')
     
+    def getLabels(self):
+        return self.rgbaToLabels(self.pixmapToArray(self.annotationPix))
     
     @classmethod
     def introText(cls, rich = True):
@@ -319,7 +321,7 @@ class InSegtAnnotator(annotator.Annotator):
         return segmentation
         
 
-def insegt(image, processing_function, labels=None):
+def insegt(image, processing_function, labels=None, saveAddress=None):
     '''
     image : grayscale image given as (r,c) numpy array of type uint8 
     processing_function : a functiobn which given label image of size (r,c)
@@ -332,7 +334,10 @@ def insegt(image, processing_function, labels=None):
         ex.annotationPix = PyQt5.QtGui.QPixmap(ex.rgbaToPixmap(
             ex.labelsToRgba(labels, opacity=ex.annotationOpacity)))
         ex.transformLabels()
-   
+    if saveAddress is not None:
+        ex.saveAddress = saveAddress
+        if ex.saveAddress[-1] != '/':
+            ex.saveAddress += '/'
     ex.show()
     
     app.exec()

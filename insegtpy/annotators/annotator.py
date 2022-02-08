@@ -470,7 +470,7 @@ if __name__ == '__main__':
     '''
        
     if len(sys.argv)<2:
-        print('Usage: $ python annotator image_filename')
+        print('Usage: $ python annotator.py image_filename')
     else:
         app = PyQt5.QtWidgets.QApplication([])
         filename = sys.argv[1]

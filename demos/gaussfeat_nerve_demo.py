@@ -21,18 +21,18 @@ model = insegtpy.models.gauss_features_segmentor(image,
                                    propagation_size = 15, 
                                    scales=[1, 0.7, 0.5])
 
-# Now you can choose ONE of the three ways of using the model: A, B, or C.
+#Now you can choose ONE of the three ways of using the model: A, B, or C.
 
-# #%% A: Interactive use
-# ex = insegtpy.insegt(image, model)
-#      #  ... interaction
-# seg = insegtpy.utils.segment_probabilities(ex.probabilities) 
+#%% A: Interactive use
+ex = insegtpy.insegt(image, model)
+      #  ... interaction
+seg = insegtpy.utils.segment_probabilities(ex.probabilities) 
 
-# #%% B: Interactive starting with pre-prepared labeling
-# labels = np.array(PIL.Image.open('../data/NT2_0001_labels.png'))
-# ex = insegtpy.insegt(image, model, labels=labels)
-#      #  ... interaction
-# seg = insegtpy.utils.segment_probabilities(ex.probabilities) 
+#%% B: Interactive starting with pre-prepared labeling
+labels = np.array(PIL.Image.open('../data/NT2_0001_labels.png'))
+ex = insegtpy.insegt(image, model, labels=labels)
+      #  ... interaction
+seg = insegtpy.utils.segment_probabilities(ex.probabilities) 
 
 
 #%% C: Non-interactive use

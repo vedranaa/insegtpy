@@ -82,7 +82,7 @@ class Multiscale(Segt):
             probs_scaled = segt.segment_new(image_scaled)
             probs = probs * (utils.imscale(probs_scaled, size=image.shape) + 
                                  self.aditive_parameter)
-        return probs    
+        return utils.normalize_to_one(probs) 
 
     
 

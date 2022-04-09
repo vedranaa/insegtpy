@@ -56,7 +56,7 @@ class GaussFeatureMultiIm:
                 feat_sums += np.sum(features, axis=(1,2))
                 feat_vars += (np.var(features, axis=(1,2))*n)
                 feat_count += n
-            print(time.time()-t)
+            # print(time.time()-t)
    
         if ( self.normalization_means is None):
             self.normalization_means = feat_sums/feat_count
@@ -411,6 +411,23 @@ class GaussMultiImage:
             assignments = self.km_tree_scale.search_scale(features)
             return self.dict_prop_sc.dictprob_to_improb_scales(assignments)
     
+    def segment_new(self, image):
+        '''
+        Segments a new image by computing the probability of a single image.
+
+        Parameters
+        ----------
+        image : numpy arrays
+            Image.
+
+        Returns
+        -------
+        numpy arrays
+            Returns the comptued probabilities as an image.
+
+        '''
+        return self.compute_probability(image)[0]
+    
     def optimize(self, this_dict_propagator, assignments, residuals, alpha, beta):
         '''
         Optimizing the dictionary according to residuals.
@@ -436,7 +453,7 @@ class GaussMultiImage:
 
         '''
         this_dict_propagator.improb_to_dictprob_scales(assignments, residuals) # computes the image probability
-        probability_new = np.ones(residuals[0].shape) # The output probability image
+        # probability_new = np.ones(residuals[0].shape) # The output probability image
         for dict_prop, this_dict_prop, assignment in zip(self.dict_prop_sc.propagators, this_dict_propagator.propagators, assignments):            
             # Difference in probability dictionaries
             diff_prob_dict = dict_prop.probability_dictionary - this_dict_prop.probability_dictionary
@@ -496,7 +513,7 @@ class GaussMultiImage:
 
         '''
         this_dict_propagator.improb_to_dictprob_scales(assignments, residuals) # computes the image probability
-        probability_new = np.ones(residuals[0].shape) # The output probability image
+        # probability_new = np.ones(residuals[0].shape) # The output probability image
         for dict_prop, this_dict_prop, assignment in zip(self.dict_prop_sc.propagators, this_dict_propagator.propagators, assignments):            
             # Difference in probability dictionaries
             diff_prob_dict = dict_prop.probability_dictionary - this_dict_prop.probability_dictionary

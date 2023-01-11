@@ -1,6 +1,6 @@
 # insegt(py)
 
-*A py version of [InSegt](https://github.com/vedranaa/InSegt)*
+*A py version of [InSegt](https://github.com/vedranaa/InSegt). Original matlab version was used in publications prior to 2020.*
 
 Given lited labeling of an image, InSegt can provide full segmentation of this, or similar, image.
 

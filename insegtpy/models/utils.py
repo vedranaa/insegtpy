@@ -20,11 +20,11 @@ def normalize_to_float(image):
 
     '''
     if image.dtype == 'uint8':
-        image = image.astype(np.float)/255.0
+        image = image.astype(float)/255.0
     elif image.dtype == 'uint16':
-        image = image.astype(np.float)/65535.0
+        image = image.astype(float)/65535.0
     elif image.dtype == 'uint32':
-        image = image.astype(np.float)/4294967295.0
+        image = image.astype(float)/4294967295.0
     return image
 
 # def read_label_image(filename):

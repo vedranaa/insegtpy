@@ -179,7 +179,7 @@ class InSegtAnnotator(annotator.Annotator):
     
     @staticmethod
     def probabilityToRgba(probabilityLayer):
-        mask = (probabilityLayer > 0.5).astype(np.float)
+        mask = (probabilityLayer > 0.5).astype(float)
         probabilityColor = np.asarray([2*(1-mask)*probabilityLayer + mask, 
                                        1-2*np.abs(probabilityLayer-0.5), 
                                        mask*(1-2*probabilityLayer) + 1,
@@ -200,7 +200,7 @@ class InSegtAnnotator(annotator.Annotator):
         I.putpalette(palette)
         I.save(filenamebase + '_index.png')
         
-        alpha = (rgba[:,:,3:].astype(np.float))/255
+        alpha = (rgba[:,:,3:].astype(float))/255
         overlay = gray[:,:,:3]*(1-alpha) + rgba[:,:,:3]*(alpha)
         PIL.Image.fromarray(overlay.astype(np.uint8)).save(filenamebase + '_overlay.png') 
          

@@ -14,12 +14,19 @@ g++ -fPIC -shared -Ofast -o km_dict_lib.so km_dict.cpp
 
 #include <vector>
 //#include <iostream>
-#include <math.h>   
+#include <math.h>
 //#include <cmath>
 #include <climits>
 #include <cstdio>
 #include <algorithm>
 using namespace std;
+
+
+#ifdef _WIN32
+#define API_EXPORT __declspec(dllexport)
+#else
+#define API_EXPORT
+#endif
 
 // struct for image
 struct im_st
@@ -53,7 +60,7 @@ void sample_patch(im_st& im, tree_st& tree, im_patch& patch, int r_im, int c_im,
     int id_l, id_c, id_i; // iterators for looking up image data
     int id_p = 0; // iterator for looking up patch data
     double sum_sq = 0, pix_val; // variables for normalization
-    
+
     for ( int l = 0; l < im.layers; l++ ){ // image is sampled by three nested loops
         id_l = im.n_pix*l;
         for ( int i = r_im-tree.Mh; i <= r_im+tree.Mh; i++ ){ // rows and cols swapped
@@ -67,7 +74,7 @@ void sample_patch(im_st& im, tree_st& tree, im_patch& patch, int r_im, int c_im,
             }
         }
     }
-    
+
     if ( normalize ){ // normalization to unit length
         double inv_sq = 1;
         if ( sum_sq > 0 ){
@@ -89,7 +96,7 @@ void sample_patch_multi(im_st& im, tree_st& tree, int im_nr, im_patch& patch, in
     int id_p = 0; // iterator for looking up patch data
     int id_n_im = im.n_pix*im.layers*im_nr; // number of pixels before start
     double sum_sq = 0, pix_val; // variables for normalization
-    
+
     for ( int l = 0; l < im.layers; l++ ){ // image is sampled by three nested loops
         id_l = im.n_pix*l + id_n_im;
         for ( int i = r_im-tree.Mh; i <= r_im+tree.Mh; i++ ){ // rows and cols swapped
@@ -103,7 +110,7 @@ void sample_patch_multi(im_st& im, tree_st& tree, int im_nr, im_patch& patch, in
             }
         }
     }
-    
+
     if ( normalize ){ // normalization to unit length
         double inv_sq = 1;
         if ( sum_sq > 0 ){
@@ -122,22 +129,22 @@ vector<int> randperm( int n, int n_set ) {
     if ( n_set > n ){ // check if n_set exceeds n (ensure that id does not exceed the array)
         n_set = n;
     }
-    
+
     vector<int> rid;
     rid.reserve(n); // vector of indices
     for ( int i = 0; i < n; i++ ){ // set all indices in order
         rid.push_back(i);
     }
-    
+
     int t, id; // place holders for id and temporary number
     int r_max = RAND_MAX; // maximum random number
     for ( int i = 0; i < n_set; i++ ){
         // choose a random number between i and n-1 and swap place between i and id
         if ( LONG_MAX > RAND_MAX && n-i-1>RAND_MAX ){ // not enough with a random integer up til RAND_MAX
-            id = ((rand()*(r_max+1)+rand()) % (n-i)) + i; 
+            id = ((rand()*(r_max+1)+rand()) % (n-i)) + i;
         }
         else{
-            id = (rand() % (n-i)) + i; 
+            id = (rand() % (n-i)) + i;
         }
         t = rid[id];
         rid[id] = rid[i];
@@ -171,14 +178,14 @@ double get_dist(tree_st& tree, im_patch& patch, int node)
 {
     double d = 0, tmp;
     int id = tree.n_dim*node;
-    
+
     for ( int i = 0; i < tree.n_dim; i++ ){
         tmp = *(tree.tree_data + id) - *(patch.patch_data + i);
         d += tmp*tmp;
         id++;
-        
+
     }
-    
+
     return d;
 }
 
@@ -195,7 +202,7 @@ void k_means( vector<im_patch>& patches, tree_st& tree, int f, int t, int node )
     double min_d, d, tmp;//, diff; // variables for clustering
     // variables for cluster id and index of previous cluseter, which will be overwritten by new cluster id
     int id = 0, id_in = patches[f].idx;
-    
+
     if ( t-f > tree.branch_fac ){ // check if there are enough point to carry out the clustering
         // initialize the center positions
         vector<int> r_id = randperm(t-f, tree.branch_fac); // indices of random patches
@@ -205,7 +212,7 @@ void k_means( vector<im_patch>& patches, tree_st& tree, int f, int t, int node )
 
         // run clutering for 30 iterations - only little change happens after 10 iterations
         for ( int n_run = 0; n_run < 30; n_run++){
-            
+
             for ( int i = f; i < t; i++ ){ // go through the patches from f to t
                 min_d = get_dist(tree, patches[i], node); // initially set min distance and id to the first
                 id = 0;
@@ -221,11 +228,11 @@ void k_means( vector<im_patch>& patches, tree_st& tree, int f, int t, int node )
                 // update the idx to the child idx - note that all layers start with idx = 0
                 patches[i].idx = (id + id_in*tree.branch_fac);
             }
-            
+
             // update the clusters in the tree and calculate the center change (not used for anything)
             id = node*tree.n_dim;
             int id_c = 0;
-            
+
             for ( int i = 0; i < tree.branch_fac; i++ ){ // go through all new clusters
                 if ( centCount[i] == 0 ){
                     centCount[i] = 1;
@@ -239,7 +246,7 @@ void k_means( vector<im_patch>& patches, tree_st& tree, int f, int t, int node )
                     id++;
                 }
             }
-            
+
             // set counter and sum to zero
             fill(centSum.begin(), centSum.end(), 0);
             fill(centCount.begin(), centCount.end(),0);
@@ -265,19 +272,19 @@ int get_to( vector<im_patch>& patches, int id )
 void build_km_tree ( im_st& im, tree_st& tree, int n_train, bool normalize ) {
     // allocate memory for the image patches
     double* im_patch_data = new double[n_train*tree.M*tree.M*im.layers];
-    
+
     int rows_c = im.rows-tree.M+1, cols_c = im.cols-tree.M+1; // number of rows and cols within sampling area
     int n_im_patches = rows_c*cols_c; // number of pixels in the image for sampling - inside boundary
-    
+
     // checks that the number of training patches is not exceeding the number of pixels in the sample area
     if ( n_im_patches < n_train ){
         n_train = n_im_patches;
     }
-    
+
     vector<int> r_id = randperm(n_im_patches, n_train); // indices of random patches
     vector<im_patch> patches; // vector of image patches
     patches.resize(n_train); // allocate memory
-    
+
     int r, c, idx = 0; // variables used for sampling the image
     // sample image patches
     for (int i = 0; i < n_train; i++ )
@@ -289,13 +296,13 @@ void build_km_tree ( im_st& im, tree_st& tree, int n_train, bool normalize ) {
         sample_patch(im, tree, patches[i], r + tree.Mh, c + tree.Mh, normalize); // sampel in image with added boundary
         idx += tree.n_dim; // step number of patch pixels forward
     }
-    
+
     // k-means tree
     int n_layer = (int)ceil(log((double)tree.n_nodes)/log((double)tree.branch_fac)); // number of layers in the tree
     int n_in_layer; // number of nodes in layer
     int t, f; // keeps track of patches that belong to a certain cluster
     int node = 0; // node number that will be updated
-    
+
     // go through the layers in the tree
     for (int i = 0; i < n_layer; i++ )
     {
@@ -316,7 +323,7 @@ void build_km_tree ( im_st& im, tree_st& tree, int n_train, bool normalize ) {
             node += tree.branch_fac; // next node
         }
     }
-    
+
     delete[] im_patch_data; // free up patch memory
 }
 
@@ -340,14 +347,14 @@ Input:
 =============================================================================*/
 
 
-extern "C" void build_km_tree(const double *I, int rows, int cols, int channels, int patch_size, int n_layer, 
-                              int branch_fac, int n_train, bool normalize, double *tree) 
+extern "C" API_EXPORT void build_km_tree(const double *I, int rows, int cols, int channels, int patch_size, int n_layer,
+                              int branch_fac, int n_train, bool normalize, double *tree)
 {
     // input image (I), patch size (M*M), number of nodes in the tree (n), branching
     // factor (b), and number of training patches (n_train). Outputs the km-tree (tree)
 
     int n = 0;
-    
+
     int n_tmp = 0;
     int max_n = n_train;
     for ( int i = 0; i < n_layer; i++ ){
@@ -359,9 +366,9 @@ extern "C" void build_km_tree(const double *I, int rows, int cols, int channels,
         n = n_tmp;
     }
     // n = (pow(branch_fac,n_layer+1)-branch_fac)/(branch_fac-1);
-    
+
     printf("Number of nodes in resulting tree: %d in %d layers.\n", n, n_layer);
-    
+
     // image struct
     im_st Im;
     Im.im_data = I;
@@ -369,9 +376,9 @@ extern "C" void build_km_tree(const double *I, int rows, int cols, int channels,
     Im.cols = cols;
     Im.layers = channels;
     Im.n_pix = Im.rows*Im.cols;
-    
 
-    
+
+
     // tree struct
     tree_st Tree;
     Tree.tree_data = tree;
@@ -380,7 +387,7 @@ extern "C" void build_km_tree(const double *I, int rows, int cols, int channels,
     Tree.branch_fac = branch_fac;
     Tree.M = patch_size;
     Tree.Mh = (int)(0.5*((double)patch_size-1.0));
-    
+
     // Set all values in tree to -1
     for (int i = 0; i < Tree.n_dim*Tree.n_nodes; i++ )
         *(tree + i) = -1;
@@ -396,18 +403,18 @@ extern "C" void build_km_tree(const double *I, int rows, int cols, int channels,
 void build_km_tree_multi ( im_st& im, tree_st& tree, int n_train, bool normalize ) {
     // allocate memory for the image patches
     double* im_patch_data = new double[n_train*tree.M*tree.M*im.layers*im.n_im];
-    
+
     int rows_c = im.rows-tree.M+1, cols_c = im.cols-tree.M+1; // number of rows and cols within sampling area
     int n_im_patches = rows_c*cols_c; // number of pixels in the image for sampling - inside boundary
-    
+
     // checks that the number of training patches is not exceeding the number of pixels in the sample area
     if ( n_im_patches < n_train ){
         n_train = n_im_patches;
     }
-    
+
     vector<im_patch> patches; // vector of image patches
     patches.resize(n_train*im.n_im); // allocate memory
-    
+
     int r, c, idx = 0, pid; // variables used for sampling the image
 
     // sample image patches
@@ -430,7 +437,7 @@ void build_km_tree_multi ( im_st& im, tree_st& tree, int n_train, bool normalize
     int n_in_layer; // number of nodes in layer
     int t, f; // keeps track of patches that belong to a certain cluster
     int node = 0; // node number that will be updated
-    
+
     // go through the layers in the tree
     for (int i = 0; i < n_layer; i++ )
     {
@@ -451,7 +458,7 @@ void build_km_tree_multi ( im_st& im, tree_st& tree, int n_train, bool normalize
             node += tree.branch_fac; // next node
         }
     }
-    
+
     delete[] im_patch_data; // free up patch memory
 }
 
@@ -475,15 +482,15 @@ Input:
 =============================================================================*/
 
 
-extern "C" void build_km_tree_multi(const double *I, int rows, int cols, int channels, int n_im, 
-                                    int patch_size, int n_layer, int branch_fac, int n_train, 
-                                    bool normalize, double *tree) 
+extern "C" API_EXPORT void build_km_tree_multi(const double *I, int rows, int cols, int channels, int n_im,
+                                    int patch_size, int n_layer, int branch_fac, int n_train,
+                                    bool normalize, double *tree)
 {
     // input image (I), patch size (M*M), number of nodes in the tree (n), branching
     // factor (b), and number of training patches (n_train). Outputs the km-tree (tree)
 
     int n = 0;
-    
+
     int n_tmp = 0;
     int max_n = n_train*n_im;
     for ( int i = 0; i < n_layer; i++ ){
@@ -495,9 +502,9 @@ extern "C" void build_km_tree_multi(const double *I, int rows, int cols, int cha
         n = n_tmp;
     }
     // n = (pow(branch_fac,n_layer+1)-branch_fac)/(branch_fac-1);
-    
+
     printf("Number of nodes in resulting tree: %d in %d layers.\n", n, n_layer);
-    
+
     // image struct
     im_st Im;
     Im.im_data = I;
@@ -506,9 +513,9 @@ extern "C" void build_km_tree_multi(const double *I, int rows, int cols, int cha
     Im.layers = channels;
     Im.n_pix = Im.rows*Im.cols;
     Im.n_im = n_im;
-    
 
-    
+
+
     // tree struct
     tree_st Tree;
     Tree.tree_data = tree;
@@ -517,7 +524,7 @@ extern "C" void build_km_tree_multi(const double *I, int rows, int cols, int cha
     Tree.branch_fac = branch_fac;
     Tree.M = patch_size;
     Tree.Mh = (int)(0.5*((double)patch_size-1.0));
-    
+
     // Set all values in tree to -1
     for (int i = 0; i < Tree.n_dim*Tree.n_nodes; i++ )
         *(tree + i) = -1;
@@ -534,19 +541,19 @@ extern "C" void build_km_tree_multi(const double *I, int rows, int cols, int cha
 int search_tree(im_st& im, tree_st& tree, im_patch& patch, int& r, int& c, bool& normalize)
 {
     int node = 0, node_min = -1, node_min_level, next_node; // variables for searching the tree
-    double d_min = 10e100, d, d_min_level; 
-    
+    double d_min = 10e100, d, d_min_level;
+
     sample_patch(im, tree, patch, r, c, normalize); // get the pixel values in a patch
     while ( node < tree.n_nodes ){ // go through the tree
         if ( *(tree.tree_data + node*tree.n_dim) == -1 ){ // check if node is a leaf-node
             return node_min;
         }
         d_min_level = 10e100; // set minimum distance to high value
-        for ( int i = 0; i < tree.branch_fac; i++ ){ // go through nodes at level 
+        for ( int i = 0; i < tree.branch_fac; i++ ){ // go through nodes at level
             next_node = node + i;
             d = get_dist(tree, patch, next_node);
 //             d = get_dist(patch, tree, next_node);///////////////////////////////////////////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            
+
             if ( d < d_min_level ){ // set current node to the minimum distance
                 d_min_level = d;
                 node_min_level = next_node;
@@ -571,7 +578,7 @@ void search_image(im_st& im, tree_st& tree, int *A, bool& normalize)
     patch.idx = 0;
     for ( int i = tree.Mh; i < im.rows-tree.Mh; i++ ){
         idx += tree.Mh; // first Mh pixels are border
-        for ( int j = tree.Mh; j < im.cols-tree.Mh; j++ ){           
+        for ( int j = tree.Mh; j < im.cols-tree.Mh; j++ ){
             *(A + idx) = search_tree(im, tree, patch, i, j, normalize); // find assignment
             idx++;
         }
@@ -603,10 +610,10 @@ Author: Anders Dahl, abda@dtu.dk, december 2020.
 
 
 
-extern "C" void search_km_tree(const double *I, int rows, int cols, int channels, double *tree, int patch_size, int n_nodes, 
-                              int branch_fac, bool normalize, int *A) 
+extern "C" API_EXPORT void search_km_tree(const double *I, int rows, int cols, int channels, double *tree, int patch_size, int n_nodes,
+                              int branch_fac, bool normalize, int *A)
 {
-    
+
 
   // tree struct
   tree_st Tree;
@@ -616,7 +623,7 @@ extern "C" void search_km_tree(const double *I, int rows, int cols, int channels
   Tree.branch_fac = branch_fac;
   Tree.M = patch_size;
   Tree.Mh = (int)(0.5*(double)(patch_size-1.0));
-  
+
   // image struct
   im_st Im;
   Im.im_data = I;
@@ -655,7 +662,7 @@ Input:
 
 Author: Anders Dahl, abda@dtu.dk, december 2020.
 *============================================================================*/
-extern "C" void prob_im_to_dict(const int *A, int rows, int cols, const double *P, int n_labels, int patch_size, int n_elem, double *D)
+extern "C" API_EXPORT void prob_im_to_dict(const int *A, int rows, int cols, const double *P, int n_labels, int patch_size, int n_elem, double *D)
 {
 
     int n_dpix = patch_size*patch_size*n_labels;
@@ -665,14 +672,14 @@ extern "C" void prob_im_to_dict(const int *A, int rows, int cols, const double *
     for (int i = 0; i < n_dpix*n_elem; i++ )
       *(D_tmp + i) = 0;
 
-    
+
     double* dict_count = new double[n_elem];
     for ( int i = 0; i < n_elem; i++ )
         *(dict_count + i) = 0;
-    
+
     int patch_h = floor( patch_size / 2 );
-    
-    
+
+
     // Assign probabilities to image
     int id_D;
     int id_A, id_P, id_Pk; // Index values
@@ -694,7 +701,7 @@ extern "C" void prob_im_to_dict(const int *A, int rows, int cols, const double *
         }
     }
 
-    
+
     int c_iter;
     for ( int i = 0; i < n_elem; i++ ){
         c_iter = i*n_dpix;
@@ -704,7 +711,7 @@ extern "C" void prob_im_to_dict(const int *A, int rows, int cols, const double *
             }
         }
     }
-    
+
     for (int i = 0; i < n_dpix*n_elem; i++ )
         *(D + i) = *(D_tmp + i);
 
@@ -718,10 +725,10 @@ extern "C" void prob_im_to_dict(const int *A, int rows, int cols, const double *
 /*=================================================================
 * syntax: dict_to_prob_im_opt(const int *A, int rows, int cols, const double *D, int patch_size, int n_label, double *P)
 *
-* set_probabilities_cpp - sets the probabilities based on assignment image 
+* set_probabilities_cpp - sets the probabilities based on assignment image
 *                         and probabilities of dictionary elements
-* 			
-* Input: 
+*
+* Input:
 *   - A: rows-by-cols assignemnt image
 *   - rows: number of rows in assignemnt
 *   - cols: number of cols in assignemnt
@@ -733,20 +740,20 @@ extern "C" void prob_im_to_dict(const int *A, int rows, int cols, const double *
 * 			Author: Anders Dahl, abda@dtu.dk, December 2020.
 *=================================================================*/
 
-extern "C" void dict_to_prob_im_opt(const int *A, int rows, int cols, const double *D, int patch_size, int n_label, double *P) 
+extern "C" API_EXPORT void dict_to_prob_im_opt(const int *A, int rows, int cols, const double *D, int patch_size, int n_label, double *P)
 {
-    
+
     int patch_h = floor( patch_size / 2 ); // half patch size minus 0.5
     int d_rows = patch_size*patch_size*n_label; // number of rows in D
     int n_pix = rows*cols; // number of pixels in image
     int n_patch = patch_size*patch_size; // number pixels in patch
-    
+
     double* P_tmp = new double[rows*cols*n_label];
     // Set output memory to zeros
     for ( int i = 0; i < rows*cols*n_label; i++ ){
         P_tmp[i] = 0;
     }
-    
+
     // Assign probabilities to image
     int id_D, id_A, id_P, id_Pk; // Index values
     for ( int i = patch_h; i < rows-patch_h; i++ ){
@@ -765,7 +772,7 @@ extern "C" void dict_to_prob_im_opt(const int *A, int rows, int cols, const doub
             }
         }
     }
-    
+
     // Pixel-wise normalize
     double s, s_inv;
     for ( int i = 0; i < rows; i++ ){
@@ -795,10 +802,10 @@ extern "C" void dict_to_prob_im_opt(const int *A, int rows, int cols, const doub
 /*=================================================================
 * syntax: dict_to_prob_im(const int *A, int rows, int cols, const double *D, int patch_size, int n_label, double *P)
 *
-* set_probabilities_cpp - sets the probabilities based on assignment image 
+* set_probabilities_cpp - sets the probabilities based on assignment image
 *                         and probabilities of dictionary elements
-* 			
-* Input: 
+*
+* Input:
 *   - A: rows-by-cols assignemnt image
 *   - rows: number of rows in assignemnt
 *   - cols: number of cols in assignemnt
@@ -810,18 +817,18 @@ extern "C" void dict_to_prob_im_opt(const int *A, int rows, int cols, const doub
 * 			Author: Anders Dahl, abda@dtu.dk, December 2020.
 *=================================================================*/
 
-extern "C" void dict_to_prob_im(const int *A, int rows, int cols, const double *D, int patch_size, int n_label, double *P) 
+extern "C" API_EXPORT void dict_to_prob_im(const int *A, int rows, int cols, const double *D, int patch_size, int n_label, double *P)
 {
-    
+
     int patch_h = floor( patch_size / 2 );
     int d_rows = patch_size*patch_size*n_label;
     int n_pix = rows*cols;
     int n_patch = patch_size*patch_size;
-    
+
     for ( int i = 0; i < rows*cols*n_label; i++ ){
         P[i] = 0;
     }
-    
+
     int id_D, id_A, id_P;
     for ( int i = patch_h; i < rows-patch_h+1; i++ ){
         for ( int j = patch_h; j < cols-patch_h+1; j++ ){
@@ -838,7 +845,7 @@ extern "C" void dict_to_prob_im(const int *A, int rows, int cols, const double *
             }
         }
     }
-    
+
     double s;
     for ( int i = 0; i < rows; i++ ){
         for ( int j = 0; j < cols; j++ ){
@@ -901,16 +908,16 @@ Input:
 
 Author: Anders Dahl, abda@dtu.dk, december 2020.
 *============================================================================*/
-extern "C" void im_to_assignment(const double *I,  int rows, int cols, const double *C, int patch_size, int n_clust, int *A){
+extern "C" API_EXPORT void im_to_assignment(const double *I,  int rows, int cols, const double *C, int patch_size, int n_clust, int *A){
     int patch_h = floor( patch_size / 2 ); // half patch size minus 0.5
     int n_patch = patch_size*patch_size; // number pixels in patch
     int idx;
-    
+
     for ( int i = 0; i < rows*cols; i++ ){
         A[i] = 0;
     }
 
-    
+
     double *patch = new double[patch_size*patch_size];
     for ( int i = patch_h; i < rows-patch_h; i++ ){
         idx = i*cols;
@@ -921,50 +928,3 @@ extern "C" void im_to_assignment(const double *I,  int rows, int cols, const dou
     }
     delete[] patch;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

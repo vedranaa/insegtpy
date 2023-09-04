@@ -44,7 +44,7 @@ setup(name='insegtpy',
     license='GNU GPSv3',
     packages=['insegtpy', 'insegtpy.annotators', 'insegtpy.models'],
     zip_safe=False,
-    install_requires=['PyQt5', 'opencv-python', 'numpy', 'scikit-learn'],
+    install_requires=['PyQt5', 'opencv-python-headless', 'numpy', 'scikit-learn'],
     ext_modules=[km_dict_module],
     cmdclass={'build_ext': my_build_ext},
 )

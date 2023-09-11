@@ -212,7 +212,7 @@ class DictionaryPropagator:
         self.probability_dictionary = None
 
 
-    def improb_to_dictprob(self, assignment, probability):
+    def improb_to_dictprob(self, assignment, probability, normalize_dict=True):
         '''
         Taking image probabilities and assigning them to dictionary probabilities
         according to an assignment image A.
@@ -239,7 +239,8 @@ class DictionaryPropagator:
                                  ctypes.c_int, ctypes.c_int,
                                  ctl.ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"),
                                  ctypes.c_int, ctypes.c_int, ctypes.c_int,
-                                 ctl.ndpointer(ctypes.c_double, flags="C_CONTIGUOUS")]
+                                 ctl.ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"),
+                                 ctypes.c_int]
         # say which output the function gives
         py_prob_to_dict.restype = None
 
@@ -253,9 +254,52 @@ class DictionaryPropagator:
             self.probability_dictionary = np.empty((self.dictionary_size,
                                 number_layers*self.patch_size**2), dtype=float) # will be overwritten
 
+        normalize = 1 if normalize_dict else 0
+
         # do the work
         py_prob_to_dict(assignment, rows, cols, probability, number_layers, self.patch_size,
-                        self.dictionary_size, self.probability_dictionary)
+                        self.dictionary_size, self.probability_dictionary, normalize)
+
+
+    def improb_to_dictprob_multi(self, assignment, probability):
+        # say where to look for the function
+        py_prob_to_dict = lib.prob_im_to_dict
+        # say which inputs the function expects
+        py_prob_to_dict.argtypes = [ctl.ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+                                 ctypes.c_int, ctypes.c_int,
+                                 ctl.ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"),
+                                 ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                                 ctl.ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"),
+                                 ctypes.c_int]
+        # say which output the function gives
+        py_prob_to_dict.restype = None
+
+        probability = np.asarray(probability, order='C')
+        _, rows, cols = assignment.shape
+        number_layers = probability[0].shape[0]
+
+
+        dictionary_counts = np.zeros((self.dictionary_size,
+                        number_layers*self.patch_size**2), dtype=float) # will be overwritten
+        dictionary_buffer = np.empty((self.dictionary_size,
+                        number_layers*self.patch_size**2), dtype=float) # will be overwritten
+
+        dict_normalization = np.zeros(self.dictionary_size, dtype=float)
+
+        # do the work
+        for a, p in zip(assignment, probability):
+            py_prob_to_dict(a, rows, cols, p, number_layers, self.patch_size,
+                            self.dictionary_size, dictionary_buffer, 0)
+            dictionary_counts += dictionary_buffer
+            patch_h = self.patch_size // 2
+            assign_idx, assign_counts = np.unique(
+                a[patch_h:-patch_h, patch_h:-patch_h], return_counts=True
+            )
+            dict_normalization[assign_idx] += assign_counts
+
+        dict_normalization[dict_normalization == 0] = 1.0
+
+        self.probability_dictionary = dictionary_counts / dict_normalization[:, None]
 
 
     def dictprob_to_improb(self, assignment):

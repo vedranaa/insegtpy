@@ -659,10 +659,12 @@ Input:
     patch_size : size of image patches. Must be positive and odd.
     n_elem : number of elements in dictionary
     D : dictionary probabilities
+    normalize: should dictionary probabilities be normalized (1) or not (0)
 
 Author: Anders Dahl, abda@dtu.dk, december 2020.
 *============================================================================*/
-extern "C" API_EXPORT void prob_im_to_dict(const int *A, int rows, int cols, const double *P, int n_labels, int patch_size, int n_elem, double *D)
+extern "C" API_EXPORT void prob_im_to_dict(
+    const int *A, int rows, int cols, const double *P, int n_labels, int patch_size, int n_elem, double *D, int normalize)
 {
 
     int n_dpix = patch_size*patch_size*n_labels;
@@ -702,12 +704,14 @@ extern "C" API_EXPORT void prob_im_to_dict(const int *A, int rows, int cols, con
     }
 
 
-    int c_iter;
-    for ( int i = 0; i < n_elem; i++ ){
-        c_iter = i*n_dpix;
-        if ( dict_count[i] > 0.0 ){
-            for ( int j = 0; j < n_dpix; j++ ){
-                *(D_tmp + c_iter + j) /= dict_count[i];
+    if ( normalize ){
+        int c_iter;
+        for ( int i = 0; i < n_elem; i++ ){
+            c_iter = i*n_dpix;
+            if ( dict_count[i] > 0.0 ){
+                for ( int j = 0; j < n_dpix; j++ ){
+                    *(D_tmp + c_iter + j) /= dict_count[i];
+                }
             }
         }
     }

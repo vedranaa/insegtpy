@@ -5,6 +5,8 @@ Created on Thu Apr 22 17:07:11 2021
 
 @author: abda
 """
+import numpy as np
+
 
 from insegtpy.models.kmdict import KMTree, DictionaryPropagator
 from insegtpy.models.gaussfeat import GaussFeatureExtractor
@@ -28,7 +30,8 @@ class FeatSegt(segt.Segt):
         Parameters
         ----------
         image : numpy array
-            2D image.
+            - 2D image of size (rows, cols).
+            - 3D image of size (n_images, rows, cols).
         branching_factor : integer
             Branching of kmtree.
         number_layers : integer
@@ -49,16 +52,26 @@ class FeatSegt(segt.Segt):
         '''
         
         image = utils.normalize_to_float(image)
-        
-        self.feature_extractor = GaussFeatureExtractor(sigmas=features_sigmas) 
-        features = self.feature_extractor(image, update_normalization=True)
 
-        
-        self.relator = KMTree(patch_size=1, branching_factor=branching_factor, 
+        self.feature_extractor = GaussFeatureExtractor(sigmas=features_sigmas)
+        if image.ndim == 2:
+            features = self.feature_extractor(image, update_normalization=True)
+        else:
+            features = []
+            for im in image:
+                features.append(
+                    self.feature_extractor(im, update_normalization=True)
+                )
+            features = np.asarray(features)
+
+        self.relator = KMTree(patch_size=1, branching_factor=branching_factor,
                               number_layers=number_layers)
         self.relator.build(features, number_training_vectors)
-        self.assignment = self.relator.search(features)
-        self.propagator = DictionaryPropagator(self.relator.tree.shape[0], 
+        if image.ndim == 2:
+            self.assignment = self.relator.search(features)
+        else:
+            self.assignment = np.array([self.relator.search(f) for f in features])
+        self.propagator = DictionaryPropagator(self.relator.tree.shape[0],
                                            patch_size=propagation_size)
         
     
@@ -68,8 +81,8 @@ class FeatSegt(segt.Segt):
         
         Parameters
         ----------
-        labels : 2D numpy array
-            Label image of size (r,c) with values 0 (background) to l.
+        labels : 2D or 3D numpy array
+            Label image of size ([n,] r,c) with values 0 (background) to l.
 
         Returns
         -------
@@ -77,10 +90,15 @@ class FeatSegt(segt.Segt):
             Probability image of size (l,r,c).
 
         '''
-
-        labels_onehot = utils.labels_to_onehot(labels, nr_classes)
-        self.propagator.improb_to_dictprob(self.assignment, labels_onehot)
-        probabilities = self.propagator.dictprob_to_improb(self.assignment)
+        if labels.ndim == 2:
+            labels_onehot = utils.labels_to_onehot(labels, nr_classes)
+            self.propagator.improb_to_dictprob(self.assignment, labels_onehot, True)
+            probabilities = self.propagator.dictprob_to_improb(self.assignment)
+        else:
+            labels_onehot = [utils.labels_to_onehot(l, nr_classes) for l in labels]
+            self.propagator.improb_to_dictprob_multi(self.assignment, labels_onehot)
+            probabilities = np.array([self.propagator.dictprob_to_improb(a)
+                                      for a in self.assignment])
         return probabilities
     
   

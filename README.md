@@ -10,23 +10,22 @@ Input image | User labelings | Segmentation result | Screenshot
 
 
 ## Installation
-* Download the code
-* pip install -/path/to/insegtpy/folder/containing/setup.py/
+* `pip install git+https://github.com/vedranaa/insegtpy.git`
 
 
 ## Use
 
-InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a few different segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. For help with choosing an appropriate model and suitable parameters, take a look at the provided Jupyter notebooks and python scripts. 
+InSegt has an interactive annotator (implemented in `insegtpy/annotators`) and, most importantly, a segmentation model. We have developed a few different segmentation models (placed in `insegtpy/models`), and for some of them we provide more than one segmentation. For help with choosing an appropriate model and suitable parameters, take a look at the provided Jupyter notebooks and python scripts.
 
-Models are built using two functions: 
+Models are built using two functions:
 - `sk_basic_segmentor` uses intensities from image patches as features clustered using minibatch k-means from scikit-learn. Is also available in a multi-scale version.
 - `gauss_features_segmentor` uses (multi-sigma) Gauss features clustered using km-tree. Also available in a multi-scale version.
 
 #### Python demos
 
-* `demos/skbasic_glassfibre_demo.py`, a demo script where `sk_basic_segmentor` is used for detecting fibres in a CT image of glass fibres. A good place to start, and should also run regardless of whether cpp code is misbehaving. 
+* `demos/skbasic_glassfibre_demo.py`, a demo script where `sk_basic_segmentor` is used for detecting fibres in a CT image of glass fibres. A good place to start, and should also run regardless of whether cpp code is misbehaving.
 
-* `demos/gaussfeat_nerve_demo.py`, a demo script showing how to use multiscale segmentation with `gauss_features_segmentor`. As examples we use CT nerves image. 
+* `demos/gaussfeat_nerve_demo.py`, a demo script showing how to use multiscale segmentation with `gauss_features_segmentor`. As examples we use CT nerves image.
 
 #### Jupyter notebooks
 

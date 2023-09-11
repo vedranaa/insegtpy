@@ -92,13 +92,12 @@ void sample_patch(im_st& im, tree_st& tree, im_patch& patch, int r_im, int c_im,
 // There is no check if the sampling is outside the image
 void sample_patch_multi(im_st& im, tree_st& tree, int im_nr, im_patch& patch, int r_im, int c_im, bool normalize)
 {
-    int id_l, id_c, id_i; // iterators for looking up image data
-    int id_p = 0; // iterator for looking up patch data
-    int id_n_im = im.n_pix*im.layers*im_nr; // number of pixels before start
+    unsigned long long id_l, id_c, id_i; // iterators for looking up image data
+    unsigned long long id_p = 0; // iterator for looking up patch data
+    unsigned long long id_n_im = ((unsigned long long)(im.n_pix*im.layers))*((unsigned long long)(im_nr)); // number of pixels before start
     double sum_sq = 0, pix_val; // variables for normalization
-
-    for ( int l = 0; l < im.layers; l++ ){ // image is sampled by three nested loops
-        id_l = im.n_pix*l + id_n_im;
+    for ( unsigned long long l = 0; l < im.layers; l++ ){ // image is sampled by three nested loops
+        id_l = ((unsigned long long)im.n_pix)*l + id_n_im;
         for ( int i = r_im-tree.Mh; i <= r_im+tree.Mh; i++ ){ // rows and cols swapped
             id_c = id_l + i*im.cols;
             for ( int j = c_im-tree.Mh; j <= c_im+tree.Mh; j++ ){

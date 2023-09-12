@@ -1,13 +1,14 @@
 import numpy as np
 import cv2
 
-
-def get_gauss_feat_im(image, sigma, dtype='float32',):
+def get_gauss_feat_im(image, sigma, dtype='float32', output=None):
     """Gauss derivative feaures for every image pixel.
     Arguments:
         image: a 2D image, shape (r,c).
         sigma: standard deviation for Gaussian derivatives.
         dtype: data type for image and features. Default is float32.
+        output: optional output array. If provided, it must have shape
+            (15,r,c) and dtype matching image.
     Returns:
         imfeat: a 3D array of size (15,r,c) with a 15-dimentional feature
             vector for every image pixel.
@@ -34,7 +35,10 @@ def get_gauss_feat_im(image, sigma, dtype='float32',):
 
     # Create image feature arrays and temporary array. Features are stored
     # on the first access for fast direct write of values in filter2D.
-    imfeat = np.zeros((15, ) + image.shape, dtype=image.dtype)
+    if output is None:
+        imfeat = np.zeros((15, ) + image.shape, dtype=image.dtype)
+    else:
+        imfeat = output
     imfeat_tmp = np.zeros_like(image)
 
     # Extract features. Order is a bit odd, as original order has been
@@ -90,7 +94,7 @@ class GaussFeatureExtractor:
         self.normalization_means = None
         self.normalization_stds = None
 
-    def __call__(self, image, update_normalization=False, normalize=True):
+    def __call__(self, image, update_normalization=False, normalize=True, dtype='float32'):
         '''Extract Gaussian derivative feaures for every image pixel.
         
         Arguments:
@@ -99,6 +103,7 @@ class GaussFeatureExtractor:
                 normalization parameters should be updated.
             normalize: a boolean flag indicating whether to normalize.
                 Requires that normalization_parameters exist.
+            dtype: data type for the features. Default is float32.
         Returns:
             features, 3D array of shape (n,r,c)
          
@@ -106,10 +111,10 @@ class GaussFeatureExtractor:
         '''           
                 
         # Compute features.
-        features = []
-        for sigma in self.sigmas:
-            features.append(get_gauss_feat_im(image, sigma))
-        features = np.asarray(features).reshape((-1,)+image.shape)
+        features = np.zeros((len(self.sigmas), 15) + image.shape, dtype=dtype)
+        for i, sigma in enumerate(self.sigmas):
+            get_gauss_feat_im(image, sigma, output=features[i])
+        features = features.reshape((-1,)+image.shape)
         
         # If needed, update normalization_parameters.                
         if update_normalization:

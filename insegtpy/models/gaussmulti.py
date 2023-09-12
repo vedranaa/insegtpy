@@ -22,7 +22,7 @@ class GaussFeatureMultiIm:
         self.normalization_means = None
         self.normalization_stds = None
 
-    def compute_features(self, images):
+    def compute_features(self, images, dtype='float32'):
         '''
         Computes Gaussian features from a list of images and returns a list of 
         features
@@ -31,6 +31,8 @@ class GaussFeatureMultiIm:
         ----------
         images : list of numpy arrays
             Input images.
+        dtype : string or numpy dtype, optional
+            Data type of the output features. The default is 'float32'.
 
         Returns
         -------
@@ -46,10 +48,10 @@ class GaussFeatureMultiIm:
             images[i] = utils.normalize_to_float(images[i])
             t = time.time()
             # Compute features.
-            features = []
-            for sigma in self.sigmas:
-                features.append(get_gauss_feat_im(images[i], sigma))
-            features = np.asarray(features).reshape((-1,)+images[i].shape)
+            features = np.zeros((len(self.sigmas), 15) + images[i].shape, dtype=dtype)
+            for i, sigma in enumerate(self.sigmas):
+                get_gauss_feat_im(images[i], sigma, output=features[i])
+            features = features.reshape((-1,)+images[i].shape)
             feature_list.append(features)
             if ( self.normalization_means is None ):
                 n = np.prod(features.shape[1:])

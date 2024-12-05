@@ -461,7 +461,7 @@ def annotate(image):
     ex = Annotator.fromGrayscale(image)
     ex.show()
     app.exec()       
- 
+
     
 if __name__ == '__main__':
     

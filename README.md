@@ -11,7 +11,12 @@ Input image | User labelings | Segmentation result | Screenshot
 
 ## Installation
 * Download the code
-* pip install -/path/to/insegtpy/folder/containing/setup.py/
+* Compile the `km_dict.cpp` file in the `insegtpy/models` folder using the command:
+    * `g++ -fPIC -shared -O3 -o km_dict_lib.so km_dict.cpp`
+    <br>or
+    * `g++ -fPIC -shared -Ofast -o km_dict_lib.so km_dict.cpp`
+* Install the code with the command:
+    * `pip install /path/to/insegtpy/folder/containing/setup.py/`
 
 
 ## Use

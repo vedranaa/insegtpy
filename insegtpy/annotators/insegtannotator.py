@@ -66,6 +66,7 @@ class InSegtAnnotator(annotator.Annotator):
         self.segmentationOpacity = 0.3
         self.model = model
         self.saveAddress = ''
+        self.savePrefix = ''
         
         # check whether model has built-in callable attribute probToSeg 
         if not (hasattr(self.model, 'probToSeg') and callable(getattr(self.model, 'probToSeg'))):  
@@ -208,8 +209,8 @@ class InSegtAnnotator(annotator.Annotator):
     def saveOutcome(self):
         gray = self.pixmapToArray(self.imagePix) # numpy RGBA: height x width x 4, values uint8 
         # PIL.Image.fromarray(gray[:,:,0]).save(self.saveAddress + 'gray.png')
-        self.savePixmap(self.annotationPix, self.saveAddress + 'annotations', gray)
-        self.savePixmap(self.segmentationPix, self.saveAddress + 'segmentations', gray)
+        self.savePixmap(self.annotationPix, self.saveAddress + self.savePrefix + 'annotations', gray)
+        self.savePixmap(self.segmentationPix, self.saveAddress + self.savePrefix + 'segmentations', gray)
         self.showInfo('Saved annotations and segmentations in various formats')        
     
     
@@ -321,7 +322,7 @@ class InSegtAnnotator(annotator.Annotator):
         return segmentation
         
 
-def insegt(image, processing_function, labels=None, saveAddress=None):
+def insegt(image, processing_function, labels=None, saveAddress=None, savePrefix=''):
     '''
     image : grayscale image given as (r,c) numpy array of type uint8 
     processing_function : a functiobn which given label image of size (r,c)
@@ -338,6 +339,8 @@ def insegt(image, processing_function, labels=None, saveAddress=None):
         ex.saveAddress = saveAddress
         if ex.saveAddress[-1] != '/':
             ex.saveAddress += '/'
+    if savePrefix is not None:
+        ex.savePrefix = savePrefix + '_'
     ex.show()
     
     app.exec()
